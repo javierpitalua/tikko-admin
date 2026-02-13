@@ -24,7 +24,7 @@ function ProtectedLayout() {
   }
 
   const style = {
-    "--sidebar-width": "16rem",
+    "--sidebar-width": "16.5rem",
     "--sidebar-width-icon": "3rem",
   };
 
@@ -33,10 +33,10 @@ function ProtectedLayout() {
       <div className="flex h-screen w-full">
         <AppSidebar />
         <div className="flex flex-col flex-1 min-w-0">
-          <header className="flex items-center gap-2 px-4 py-3 border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur-sm">
+          <header className="flex items-center gap-2 px-5 h-14 border-b border-border/60 sticky top-0 z-50 bg-background/80 backdrop-blur-md">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
           </header>
-          <main className="flex-1 overflow-auto p-4 md:p-6">
+          <main className="flex-1 overflow-auto p-5 md:p-7">
             <Switch>
               <Route path="/dashboard" component={DashboardPage} />
               <Route path="/events" component={EventsPage} />

@@ -318,4 +318,12 @@
   .dark .auth-logo-glow {
     box-shadow: 0 8px 32px hsl(255 85% 68% / 0.3);
   }
+
+  .sidebar-logo-glow {
+    box-shadow: 0 4px 16px hsl(252 85% 60% / 0.2);
+  }
+
+  .dark .sidebar-logo-glow {
+    box-shadow: 0 4px 16px hsl(255 85% 68% / 0.25);
+  }
 }
