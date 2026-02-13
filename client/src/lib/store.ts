@@ -1,0 +1,210 @@
+import type { Admin, Event, Reservation } from "@shared/schema";
+
+const STORAGE_KEYS = {
+  AUTH: "boletera_auth",
+  EVENTS: "boletera_events",
+  RESERVATIONS: "boletera_reservations",
+  ADMINS: "boletera_admins",
+  VERIFIED: "boletera_verified",
+};
+
+export function getAuth(): { admin: Admin; verified: boolean } | null {
+  const raw = localStorage.getItem(STORAGE_KEYS.AUTH);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function setAuth(admin: Admin, verified: boolean) {
+  localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify({ admin, verified }));
+}
+
+export function clearAuth() {
+  localStorage.removeItem(STORAGE_KEYS.AUTH);
+}
+
+export function getAdmins(): Admin[] {
+  const raw = localStorage.getItem(STORAGE_KEYS.ADMINS);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+export function saveAdmin(admin: Admin) {
+  const admins = getAdmins();
+  admins.push(admin);
+  localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(admins));
+}
+
+export function getEvents(): Event[] {
+  const raw = localStorage.getItem(STORAGE_KEYS.EVENTS);
+  if (!raw) {
+    const seed = getSeedEvents();
+    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(seed));
+    return seed;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+export function saveEvents(events: Event[]) {
+  localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+}
+
+export function getReservations(): Reservation[] {
+  const raw = localStorage.getItem(STORAGE_KEYS.RESERVATIONS);
+  if (!raw) {
+    const seed = getSeedReservations();
+    localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify(seed));
+    return seed;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+export function saveReservations(reservations: Reservation[]) {
+  localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify(reservations));
+}
+
+function getSeedEvents(): Event[] {
+  return [
+    {
+      id: "evt-1",
+      name: "Festival de Rock 2026",
+      date: "2026-04-15",
+      location: "Arena Ciudad de México",
+      description: "El festival de rock más grande de Latinoamérica con bandas nacionales e internacionales.",
+      image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=400&fit=crop",
+      category: "Música",
+      zones: [
+        { id: "z1-1", name: "VIP", capacity: 200, price: 3500, sold: 145 },
+        { id: "z1-2", name: "Preferente", capacity: 500, price: 1800, sold: 380 },
+        { id: "z1-3", name: "General", capacity: 2000, price: 800, sold: 1450 },
+      ],
+      activities: [
+        { id: "a1-1", name: "Meet & Greet", time: "14:00", description: "Conoce a los artistas" },
+        { id: "a1-2", name: "Banda Principal", time: "20:00", description: "Presentación estelar" },
+      ],
+      coupons: [
+        { id: "c1-1", code: "ROCK20", discount: 20, active: true },
+        { id: "c1-2", code: "VIP10", discount: 10, active: true },
+      ],
+      adminId: "admin-seed",
+    },
+    {
+      id: "evt-2",
+      name: "Conferencia Tech Summit",
+      date: "2026-05-22",
+      location: "Centro Banamex",
+      description: "Conferencia de tecnología e innovación con speakers internacionales.",
+      image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&h=400&fit=crop",
+      category: "Tecnología",
+      zones: [
+        { id: "z2-1", name: "Platinum", capacity: 100, price: 5000, sold: 72 },
+        { id: "z2-2", name: "Gold", capacity: 300, price: 2500, sold: 210 },
+        { id: "z2-3", name: "Standard", capacity: 1000, price: 1200, sold: 650 },
+      ],
+      activities: [
+        { id: "a2-1", name: "Keynote IA", time: "10:00", description: "El futuro de la inteligencia artificial" },
+        { id: "a2-2", name: "Workshop Cloud", time: "14:00", description: "Taller práctico de cloud computing" },
+        { id: "a2-3", name: "Networking", time: "18:00", description: "Sesión de networking" },
+      ],
+      coupons: [
+        { id: "c2-1", code: "TECH30", discount: 30, active: true },
+      ],
+      adminId: "admin-seed",
+    },
+    {
+      id: "evt-3",
+      name: "Copa de Futbol Invitacional",
+      date: "2026-06-10",
+      location: "Estadio Azteca",
+      description: "Torneo de futbol con equipos de toda la república.",
+      image: "https://images.unsplash.com/photo-1459865264687-595d652de67e?w=600&h=400&fit=crop",
+      category: "Deportes",
+      zones: [
+        { id: "z3-1", name: "Palco", capacity: 50, price: 8000, sold: 35 },
+        { id: "z3-2", name: "Tribuna", capacity: 800, price: 1500, sold: 620 },
+        { id: "z3-3", name: "Sol", capacity: 3000, price: 500, sold: 2100 },
+      ],
+      activities: [
+        { id: "a3-1", name: "Ceremonia apertura", time: "09:00", description: "Ceremonia de apertura del torneo" },
+        { id: "a3-2", name: "Final", time: "17:00", description: "Partido de la final" },
+      ],
+      coupons: [
+        { id: "c3-1", code: "GOL15", discount: 15, active: true },
+        { id: "c3-2", code: "FANS50", discount: 50, active: false },
+      ],
+      adminId: "admin-seed",
+    },
+    {
+      id: "evt-4",
+      name: "Expo Gastronomía",
+      date: "2026-07-05",
+      location: "Expo Guadalajara",
+      description: "Experiencia culinaria con los mejores chefs del país y degustaciones.",
+      image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop",
+      category: "Gastronomía",
+      zones: [
+        { id: "z4-1", name: "Chef Experience", capacity: 80, price: 4500, sold: 55 },
+        { id: "z4-2", name: "Premium", capacity: 400, price: 2000, sold: 290 },
+        { id: "z4-3", name: "Acceso General", capacity: 1500, price: 650, sold: 980 },
+      ],
+      activities: [
+        { id: "a4-1", name: "Masterclass", time: "11:00", description: "Clase magistral de cocina mexicana" },
+        { id: "a4-2", name: "Degustación", time: "15:00", description: "Degustación de platillos" },
+      ],
+      coupons: [
+        { id: "c4-1", code: "FOODIE25", discount: 25, active: true },
+      ],
+      adminId: "admin-seed",
+    },
+    {
+      id: "evt-5",
+      name: "Festival de Cine Independiente",
+      date: "2026-08-20",
+      location: "Cineteca Nacional",
+      description: "Proyecciones de cine independiente nacional e internacional.",
+      image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&h=400&fit=crop",
+      category: "Cultura",
+      zones: [
+        { id: "z5-1", name: "Sala Principal", capacity: 300, price: 350, sold: 220 },
+        { id: "z5-2", name: "Sala Alterna", capacity: 150, price: 250, sold: 100 },
+      ],
+      activities: [
+        { id: "a5-1", name: "Proyección inaugural", time: "10:00", description: "Película de apertura" },
+        { id: "a5-2", name: "Q&A con directores", time: "16:00", description: "Sesión con directores invitados" },
+      ],
+      coupons: [],
+      adminId: "admin-seed",
+    },
+  ];
+}
+
+function getSeedReservations(): Reservation[] {
+  return [
+    { id: "res-1", name: "Carlos López", email: "carlos@mail.com", phone: "5512345678", eventId: "evt-1", zoneId: "z1-2", quantity: 4, date: "2026-02-10", status: "vendido" },
+    { id: "res-2", name: "María García", email: "maria@mail.com", phone: "5598765432", eventId: "evt-1", zoneId: "z1-3", quantity: 2, date: "2026-02-11", status: "apartado" },
+    { id: "res-3", name: "Ana Martínez", email: "ana@mail.com", phone: "5511112222", eventId: "evt-2", zoneId: "z2-2", quantity: 3, date: "2026-02-12", status: "vendido" },
+    { id: "res-4", name: "Pedro Sánchez", email: "pedro@mail.com", phone: "5533334444", eventId: "evt-3", zoneId: "z3-3", quantity: 6, date: "2026-02-08", status: "apartado" },
+    { id: "res-5", name: "Laura Díaz", email: "laura@mail.com", phone: "5555556666", eventId: "evt-4", zoneId: "z4-2", quantity: 2, date: "2026-02-09", status: "vendido" },
+    { id: "res-6", name: "Roberto Flores", email: "roberto@mail.com", phone: "5577778888", eventId: "evt-2", zoneId: "z2-3", quantity: 5, date: "2026-02-07", status: "vendido" },
+    { id: "res-7", name: "Sofía Hernández", email: "sofia@mail.com", phone: "5599990000", eventId: "evt-5", zoneId: "z5-1", quantity: 3, date: "2026-02-13", status: "apartado" },
+  ];
+}
+
+export function generateId(): string {
+  return Math.random().toString(36).substr(2, 9);
+}
