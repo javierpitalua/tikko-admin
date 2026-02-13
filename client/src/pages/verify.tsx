@@ -66,8 +66,8 @@ export default function VerifyPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center gap-3 p-4 rounded-md bg-accent/50 border border-border">
-              <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 shrink-0">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-accent/50 border border-border">
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 shrink-0">
                 <Mail className="w-4 h-4 text-primary" />
               </div>
               <div className="text-sm">
@@ -77,7 +77,7 @@ export default function VerifyPage() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 text-destructive text-sm" data-testid="text-verify-error">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-sm" data-testid="text-verify-error">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 {error}
               </div>

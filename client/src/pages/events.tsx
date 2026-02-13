@@ -30,11 +30,11 @@ export default function EventsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight" data-testid="text-events-title">Eventos</h1>
-          <p className="text-muted-foreground mt-1">{events.length} eventos registrados</p>
+          <p className="text-muted-foreground mt-1.5 text-sm">{events.length} eventos registrados</p>
         </div>
         <Button onClick={() => navigate("/events/new")} data-testid="button-new-event">
           <Plus className="w-4 h-4 mr-2" />
@@ -44,7 +44,7 @@ export default function EventsPage() {
 
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Buscar eventos..."
             value={search}
@@ -54,7 +54,7 @@ export default function EventsPage() {
           />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[180px]" data-testid="select-category">
+          <SelectTrigger className="w-[200px]" data-testid="select-category">
             <SelectValue placeholder="Categoría" />
           </SelectTrigger>
           <SelectContent>
@@ -66,7 +66,7 @@ export default function EventsPage() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {filtered.map((event) => {
           const totalSold = event.zones.reduce((s, z) => s + z.sold, 0);
           const totalCap = event.zones.reduce((s, z) => s + z.capacity, 0);
@@ -75,46 +75,46 @@ export default function EventsPage() {
           return (
             <Card
               key={event.id}
-              className="overflow-visible hover-elevate cursor-pointer group"
+              className="overflow-visible hover-elevate cursor-pointer group transition-all duration-200"
               onClick={() => navigate(`/events/${event.id}`)}
               data-testid={`card-event-${event.id}`}
             >
-              <div className="aspect-[16/9] overflow-hidden rounded-t-md relative">
+              <div className="aspect-[16/9] overflow-hidden rounded-t-xl relative">
                 <img
                   src={event.image}
                   alt={event.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                 />
-                <div className="absolute top-2 right-2">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                <div className="absolute top-3 right-3">
                   <Badge
                     variant={event.status === "publicado" ? "default" : "secondary"}
-                    className="text-xs"
                   >
                     {STATUS_LABELS[event.status] || event.status}
                   </Badge>
                 </div>
               </div>
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-5 space-y-3.5">
                 <div className="flex items-start justify-between gap-2 flex-wrap">
                   <h3
-                    className="font-semibold text-foreground leading-snug line-clamp-2 cursor-pointer"
+                    className="font-semibold text-foreground leading-snug line-clamp-2"
                     data-testid={`link-event-${event.id}`}
                   >
                     {event.name}
                   </h3>
-                  <Badge variant="secondary" className="shrink-0 text-xs">{event.category}</Badge>
+                  <Badge variant="secondary" className="shrink-0">{event.category}</Badge>
                 </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
                     <Calendar className="w-3.5 h-3.5 shrink-0" />
                     <span>{new Date(event.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })} - {new Date(event.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
                     <MapPin className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{event.location}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
                     <Users className="w-3.5 h-3.5 shrink-0" />
                     <span>{totalSold} / {totalCap} boletos ({pct}%)</span>
                   </div>
@@ -122,7 +122,7 @@ export default function EventsPage() {
 
                 <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-chart-3 transition-all"
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-chart-3 transition-all duration-500"
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -133,10 +133,12 @@ export default function EventsPage() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-16">
-          <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-lg font-medium text-foreground">No se encontraron eventos</p>
-          <p className="text-muted-foreground mt-1">Intenta con otra búsqueda o categoría</p>
+        <div className="text-center py-20">
+          <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-accent mx-auto mb-5">
+            <Search className="w-7 h-7 text-muted-foreground" />
+          </div>
+          <p className="text-lg font-semibold text-foreground">No se encontraron eventos</p>
+          <p className="text-muted-foreground mt-1.5 text-sm">Intenta con otra búsqueda o categoría</p>
         </div>
       )}
     </div>

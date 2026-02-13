@@ -344,56 +344,59 @@ export default function EventDetailPage() {
   const totalRevenue = event.zones.reduce((s, z) => s + z.price * z.sold, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <Button variant="ghost" onClick={() => navigate("/events")} data-testid="button-back-events">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Volver a eventos
         </Button>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <Badge variant={STATUS_VARIANT[event.status]} data-testid="badge-event-status">
             {STATUS_LABELS[event.status]}
           </Badge>
           {!editing && (
             <Button
               variant="outline"
+              size="sm"
               onClick={startEditing}
               disabled={activeTab !== "basic"}
               data-testid="button-edit-event"
             >
               <Edit2 className="w-4 h-4 mr-2" />
-              Editar Evento
+              Editar
             </Button>
           )}
           <Button
             variant="outline"
+            size="sm"
             onClick={saveEventDraft}
             data-testid="button-save-draft"
           >
             <Save className="w-4 h-4 mr-2" />
-            Guardar Evento
+            Guardar
           </Button>
-          <Button variant="outline" onClick={() => setPreviewDialog(true)} data-testid="button-preview-event">
+          <Button variant="outline" size="sm" onClick={() => setPreviewDialog(true)} data-testid="button-preview-event">
             <Eye className="w-4 h-4 mr-2" />
             Visualizar
           </Button>
           <Button
             variant="outline"
+            size="sm"
             onClick={sendToReview}
             disabled={event.status === "en_revision" || event.status === "publicado"}
             data-testid="button-send-review"
           >
             <Send className="w-4 h-4 mr-2" />
-            Enviar a revisión
+            Revisión
           </Button>
-          <Button variant="destructive" onClick={() => setDeleteDialog(true)} data-testid="button-delete-event">
+          <Button variant="destructive" size="sm" onClick={() => setDeleteDialog(true)} data-testid="button-delete-event">
             <Trash2 className="w-4 h-4 mr-2" />
             Eliminar
           </Button>
         </div>
       </div>
 
-      <div className="relative rounded-md overflow-hidden">
+      <div className="relative rounded-2xl overflow-hidden shadow-lg">
         <div className="aspect-[21/9] md:aspect-[3/1]">
           <img
             src={editing ? draft.image : event.image}
@@ -403,21 +406,21 @@ export default function EventDetailPage() {
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-6">
+        <div className="absolute bottom-0 left-0 right-0 p-8">
           {!editing ? (
             <>
-              <Badge variant="secondary" className="mb-2">{event.category}</Badge>
+              <Badge variant="secondary" className="mb-3">{event.category}</Badge>
               <h1 className="text-2xl md:text-3xl font-bold text-white" data-testid="text-event-name">{event.name}</h1>
-              <div className="flex items-center gap-4 mt-2 flex-wrap">
-                <span className="flex items-center gap-1.5 text-sm text-white/80">
+              <div className="flex items-center gap-5 mt-3 flex-wrap">
+                <span className="flex items-center gap-2 text-sm text-white/80">
                   <Calendar className="w-4 h-4" />
                   {new Date(event.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })} - {new Date(event.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
                 </span>
-                <span className="flex items-center gap-1.5 text-sm text-white/80">
+                <span className="flex items-center gap-2 text-sm text-white/80">
                   <MapPin className="w-4 h-4" />
                   {event.location}
                 </span>
-                <span className="flex items-center gap-1.5 text-sm text-white/80">
+                <span className="flex items-center gap-2 text-sm text-white/80">
                   <Users className="w-4 h-4" />
                   {totalSold}/{totalCap} boletos
                 </span>
@@ -440,11 +443,11 @@ export default function EventDetailPage() {
       </div>
 
       {!editing && event.description && (
-        <p className="text-muted-foreground leading-relaxed" data-testid="text-event-description">{event.description}</p>
+        <p className="text-muted-foreground leading-relaxed text-sm" data-testid="text-event-description">{event.description}</p>
       )}
 
       <Tabs defaultValue="basic" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full justify-start flex-wrap gap-1">
+        <TabsList className="w-full justify-start flex-wrap gap-1 h-auto">
           <TabsTrigger value="basic" data-testid="tab-basic">
             <FileText className="w-4 h-4 mr-1.5" />
             Evento
@@ -472,11 +475,11 @@ export default function EventDetailPage() {
         </TabsList>
 
         {/* ────────────── BÁSICO ────────────── */}
-        <TabsContent value="basic" className="mt-4 space-y-4">
+        <TabsContent value="basic" className="mt-6 space-y-5">
           {editing ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Información del Evento</CardTitle>
+                <CardTitle className="text-base font-semibold">Información del Evento</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -547,7 +550,7 @@ export default function EventDetailPage() {
                 <div className="space-y-2">
                   <Label>Imagen del evento</Label>
                   {draft.image && (
-                    <div className="relative rounded-md overflow-hidden border border-border">
+                    <div className="relative rounded-xl overflow-hidden border border-border">
                       <img src={draft.image} alt="Preview" className="w-full h-40 object-cover" data-testid="img-event-preview" />
                       <Button
                         size="icon"
@@ -584,44 +587,44 @@ export default function EventDetailPage() {
             </Card>
           ) : (
             <Card>
-              <CardContent className="p-5 space-y-4">
+              <CardContent className="p-6 space-y-5">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <h2 className="text-lg font-semibold">Información General</h2>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Nombre</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Nombre</p>
                     <p className="font-medium">{event.name}</p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Categoría</p>
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Categoría</p>
                     <Badge variant="secondary">{event.category}</Badge>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Fecha de inicio</p>
-                    <p className="flex items-center gap-1.5 text-sm">
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Fecha de inicio</p>
+                    <p className="flex items-center gap-2 text-sm">
                       <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                       {new Date(event.startDate).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}
                     </p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Fecha de fin</p>
-                    <p className="flex items-center gap-1.5 text-sm">
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Fecha de fin</p>
+                    <p className="flex items-center gap-2 text-sm">
                       <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                       {new Date(event.endDate).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}
                     </p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Recinto</p>
-                    <p className="flex items-center gap-1.5 text-sm">
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Recinto</p>
+                    <p className="flex items-center gap-2 text-sm">
                       <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
                       {event.location}
                     </p>
                   </div>
                 </div>
                 {event.description && (
-                  <div className="space-y-1 pt-2 border-t border-border">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Descripción</p>
+                  <div className="space-y-1.5 pt-4 border-t border-border">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Descripción</p>
                     <p className="text-sm text-muted-foreground leading-relaxed">{event.description}</p>
                   </div>
                 )}
@@ -631,7 +634,7 @@ export default function EventDetailPage() {
         </TabsContent>
 
         {/* ────────────── ACTIVIDADES ────────────── */}
-        <TabsContent value="activities" className="mt-4 space-y-4">
+        <TabsContent value="activities" className="mt-6 space-y-5">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h2 className="text-lg font-semibold">Actividades ({event.activities.length})</h2>
             <Button size="sm" onClick={() => openActivityDialog()} data-testid="button-add-activity">
@@ -642,9 +645,9 @@ export default function EventDetailPage() {
           <div className="space-y-3">
             {event.activities.map((act) => (
               <Card key={act.id} data-testid={`card-activity-${act.id}`}>
-                <CardContent className="flex items-center justify-between gap-4 p-4 flex-wrap">
+                <CardContent className="flex items-center justify-between gap-4 p-5 flex-wrap">
                   <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-md bg-accent shrink-0">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent shrink-0">
                       <Clock className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div className="min-w-0">
@@ -665,12 +668,15 @@ export default function EventDetailPage() {
             ))}
             {event.activities.length === 0 && (
               <Card>
-                <CardContent className="py-12 text-center">
-                  <Clock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">No hay actividades registradas</p>
-                  <Button size="sm" variant="outline" className="mt-3" onClick={() => openActivityDialog()}>
+                <CardContent className="py-16 text-center">
+                  <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent mx-auto mb-4">
+                    <Clock className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <p className="font-medium text-foreground">No hay actividades registradas</p>
+                  <p className="text-sm text-muted-foreground mt-1">Agrega la primera actividad del evento</p>
+                  <Button size="sm" variant="outline" className="mt-4" onClick={() => openActivityDialog()}>
                     <Plus className="w-4 h-4 mr-1" />
-                    Agregar primera actividad
+                    Agregar actividad
                   </Button>
                 </CardContent>
               </Card>
@@ -679,9 +685,9 @@ export default function EventDetailPage() {
         </TabsContent>
 
         {/* ────────────── RECINTO ────────────── */}
-        <TabsContent value="venue" className="mt-4 space-y-4">
+        <TabsContent value="venue" className="mt-6 space-y-5">
           <Card>
-            <CardContent className="p-5 space-y-4">
+            <CardContent className="p-6 space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <h2 className="text-lg font-semibold">Zonas del Recinto ({event.zones.length})</h2>
                 <Button size="sm" onClick={() => openZoneDialog()} data-testid="button-add-zone">
@@ -692,12 +698,12 @@ export default function EventDetailPage() {
               <p className="text-sm text-muted-foreground">Define las zonas o secciones del recinto con su capacidad.</p>
             </CardContent>
           </Card>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {event.zones.map((zone) => {
               const pct = zone.capacity > 0 ? Math.round((zone.sold / zone.capacity) * 100) : 0;
               return (
                 <Card key={zone.id} data-testid={`card-zone-${zone.id}`}>
-                  <CardContent className="p-4 space-y-3">
+                  <CardContent className="p-5 space-y-3.5">
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="font-semibold">{zone.name}</h3>
                       <div className="flex items-center gap-1">
@@ -713,8 +719,8 @@ export default function EventDetailPage() {
                       <p>Capacidad: {zone.capacity.toLocaleString()}</p>
                       <p>Vendidos: {zone.sold} ({pct}%)</p>
                     </div>
-                    <div className="h-1.5 rounded-md bg-muted overflow-hidden">
-                      <div className="h-full rounded-md bg-primary" style={{ width: `${pct}%` }} />
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-primary to-chart-3 transition-all duration-500" style={{ width: `${pct}%` }} />
                     </div>
                   </CardContent>
                 </Card>
@@ -723,12 +729,15 @@ export default function EventDetailPage() {
           </div>
           {event.zones.length === 0 && (
             <Card>
-              <CardContent className="py-12 text-center">
-                <Building className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No hay zonas registradas</p>
-                <Button size="sm" variant="outline" className="mt-3" onClick={() => openZoneDialog()}>
+              <CardContent className="py-16 text-center">
+                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent mx-auto mb-4">
+                  <Building className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="font-medium text-foreground">No hay zonas registradas</p>
+                <p className="text-sm text-muted-foreground mt-1">Define las zonas del recinto</p>
+                <Button size="sm" variant="outline" className="mt-4" onClick={() => openZoneDialog()}>
                   <Plus className="w-4 h-4 mr-1" />
-                  Agregar primera zona
+                  Agregar zona
                 </Button>
               </CardContent>
             </Card>
@@ -736,7 +745,7 @@ export default function EventDetailPage() {
         </TabsContent>
 
         {/* ────────────── PRECIOS ────────────── */}
-        <TabsContent value="prices" className="mt-4 space-y-4">
+        <TabsContent value="prices" className="mt-6 space-y-5">
           <h2 className="text-lg font-semibold">Precios por Zona</h2>
           {event.zones.length > 0 ? (
             <Card>
@@ -744,35 +753,35 @@ export default function EventDetailPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border bg-accent/30">
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Zona</th>
-                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Precio Unitario</th>
-                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Capacidad</th>
-                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Vendidos</th>
-                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Ingreso</th>
-                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Acciones</th>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3.5 px-4 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Zona</th>
+                        <th className="text-right py-3.5 px-4 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Precio</th>
+                        <th className="text-right py-3.5 px-4 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Capacidad</th>
+                        <th className="text-right py-3.5 px-4 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Vendidos</th>
+                        <th className="text-right py-3.5 px-4 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ingreso</th>
+                        <th className="text-right py-3.5 px-4 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {event.zones.map((zone) => (
-                        <tr key={zone.id} className="border-b border-border last:border-0" data-testid={`row-price-${zone.id}`}>
-                          <td className="py-3 px-4 font-medium">{zone.name}</td>
-                          <td className="py-3 px-4 text-right">${zone.price.toLocaleString("es-MX")}</td>
-                          <td className="py-3 px-4 text-right">{zone.capacity.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-right">{zone.sold}</td>
-                          <td className="py-3 px-4 text-right font-medium">${(zone.price * zone.sold).toLocaleString("es-MX")}</td>
-                          <td className="py-3 px-4 text-right">
+                        <tr key={zone.id} className="border-b border-border last:border-0 transition-colors duration-150" data-testid={`row-price-${zone.id}`}>
+                          <td className="py-3.5 px-4 font-medium">{zone.name}</td>
+                          <td className="py-3.5 px-4 text-right tabular-nums">${zone.price.toLocaleString("es-MX")}</td>
+                          <td className="py-3.5 px-4 text-right tabular-nums">{zone.capacity.toLocaleString()}</td>
+                          <td className="py-3.5 px-4 text-right tabular-nums">{zone.sold}</td>
+                          <td className="py-3.5 px-4 text-right font-medium tabular-nums">${(zone.price * zone.sold).toLocaleString("es-MX")}</td>
+                          <td className="py-3.5 px-4 text-right">
                             <Button size="icon" variant="ghost" onClick={() => openZoneDialog(zone)} data-testid={`button-edit-price-${zone.id}`}>
                               <Edit2 className="w-4 h-4" />
                             </Button>
                           </td>
                         </tr>
                       ))}
-                      <tr className="bg-accent/20">
-                        <td className="py-3 px-4 font-bold" colSpan={2}>Total</td>
-                        <td className="py-3 px-4 text-right font-bold">{totalCap.toLocaleString()}</td>
-                        <td className="py-3 px-4 text-right font-bold">{totalSold}</td>
-                        <td className="py-3 px-4 text-right font-bold">${totalRevenue.toLocaleString("es-MX")}</td>
+                      <tr className="bg-accent/30">
+                        <td className="py-3.5 px-4 font-bold" colSpan={2}>Total</td>
+                        <td className="py-3.5 px-4 text-right font-bold tabular-nums">{totalCap.toLocaleString()}</td>
+                        <td className="py-3.5 px-4 text-right font-bold tabular-nums">{totalSold}</td>
+                        <td className="py-3.5 px-4 text-right font-bold tabular-nums">${totalRevenue.toLocaleString("es-MX")}</td>
                         <td />
                       </tr>
                     </tbody>
@@ -782,33 +791,36 @@ export default function EventDetailPage() {
             </Card>
           ) : (
             <Card>
-              <CardContent className="py-12 text-center">
-                <DollarSign className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">Agrega zonas en la pestaña Recinto para definir precios</p>
+              <CardContent className="py-16 text-center">
+                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent mx-auto mb-4">
+                  <DollarSign className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="font-medium text-foreground">Sin precios configurados</p>
+                <p className="text-sm text-muted-foreground mt-1">Agrega zonas en la pestaña Recinto para definir precios</p>
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
         {/* ────────────── ADICIONALES (PRODUCTOS) ────────────── */}
-        <TabsContent value="extras" className="mt-4 space-y-4">
+        <TabsContent value="extras" className="mt-6 space-y-5">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div>
               <h2 className="text-lg font-semibold">Productos y Artículos ({(event.products || []).length})</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Camisas, gorras, souvenirs, estacionamiento y otros artículos conmemorativos</p>
+              <p className="text-sm text-muted-foreground mt-1">Camisas, gorras, souvenirs, estacionamiento y otros artículos conmemorativos</p>
             </div>
             <Button size="sm" onClick={() => openProductDialog()} data-testid="button-add-product">
               <Plus className="w-4 h-4 mr-1" />
               Agregar Producto
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {(event.products || []).map((product) => (
               <Card key={product.id} data-testid={`card-product-${product.id}`}>
-                <CardContent className="p-4 space-y-3">
+                <CardContent className="p-5 space-y-3.5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-md bg-accent shrink-0">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent shrink-0">
                         <Package className="w-5 h-5 text-muted-foreground" />
                       </div>
                       <div className="min-w-0">
@@ -834,12 +846,15 @@ export default function EventDetailPage() {
           </div>
           {(event.products || []).length === 0 && (
             <Card>
-              <CardContent className="py-12 text-center">
-                <ShoppingBag className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No hay productos registrados</p>
-                <Button size="sm" variant="outline" className="mt-3" onClick={() => openProductDialog()}>
+              <CardContent className="py-16 text-center">
+                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent mx-auto mb-4">
+                  <ShoppingBag className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="font-medium text-foreground">No hay productos registrados</p>
+                <p className="text-sm text-muted-foreground mt-1">Agrega artículos y mercancía del evento</p>
+                <Button size="sm" variant="outline" className="mt-4" onClick={() => openProductDialog()}>
                   <Plus className="w-4 h-4 mr-1" />
-                  Agregar primer producto
+                  Agregar producto
                 </Button>
               </CardContent>
             </Card>
@@ -847,7 +862,7 @@ export default function EventDetailPage() {
         </TabsContent>
 
         {/* ────────────── CUPONES ────────────── */}
-        <TabsContent value="coupons" className="mt-4 space-y-4">
+        <TabsContent value="coupons" className="mt-6 space-y-5">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h2 className="text-lg font-semibold">Cupones ({event.coupons.length})</h2>
             <Button size="sm" onClick={() => openCouponDialog()} data-testid="button-add-coupon">
@@ -855,10 +870,10 @@ export default function EventDetailPage() {
               Agregar Cupón
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {event.coupons.map((coupon) => (
               <Card key={coupon.id} data-testid={`card-coupon-${coupon.id}`}>
-                <CardContent className="p-4 space-y-3">
+                <CardContent className="p-5 space-y-3.5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <code className="font-mono font-bold text-primary">{coupon.code}</code>
@@ -882,12 +897,15 @@ export default function EventDetailPage() {
           </div>
           {event.coupons.length === 0 && (
             <Card>
-              <CardContent className="py-12 text-center">
-                <Tag className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No hay cupones registrados</p>
-                <Button size="sm" variant="outline" className="mt-3" onClick={() => openCouponDialog()}>
+              <CardContent className="py-16 text-center">
+                <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent mx-auto mb-4">
+                  <Tag className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="font-medium text-foreground">No hay cupones registrados</p>
+                <p className="text-sm text-muted-foreground mt-1">Crea códigos de descuento para tus clientes</p>
+                <Button size="sm" variant="outline" className="mt-4" onClick={() => openCouponDialog()}>
                   <Plus className="w-4 h-4 mr-1" />
-                  Agregar primer cupón
+                  Agregar cupón
                 </Button>
               </CardContent>
             </Card>

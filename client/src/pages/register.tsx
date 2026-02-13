@@ -50,7 +50,7 @@ export default function RegisterPage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {error && (
-                  <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm flex items-center gap-2" data-testid="text-register-error">
+                  <div className="p-3 rounded-xl bg-destructive/10 text-destructive text-sm flex items-center gap-2" data-testid="text-register-error">
                     <div className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
                     {error}
                   </div>
