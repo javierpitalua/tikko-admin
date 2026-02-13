@@ -470,10 +470,6 @@ export default function EventDetailPage() {
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <h2 className="text-lg font-semibold">Información General</h2>
-                  <Button size="sm" variant="outline" onClick={startEditing} data-testid="button-edit-basic">
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    Editar
-                  </Button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
