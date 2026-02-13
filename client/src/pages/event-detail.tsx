@@ -48,6 +48,7 @@ export default function EventDetailPage() {
   const [activityForm, setActivityForm] = useState({ name: "", startTime: "", endTime: "", description: "" });
   const [couponForm, setCouponForm] = useState({ code: "", discount: "", active: true });
   const [productForm, setProductForm] = useState({ name: "", price: "", available: true });
+  const [confirmDelete, setConfirmDelete] = useState<{ type: string; id: string; name: string } | null>(null);
 
   useEffect(() => {
     const events = getEvents();
@@ -216,6 +217,20 @@ export default function EventDetailPage() {
     const updated = { ...event, zones: event.zones.filter((z) => z.id !== zoneId) };
     persistEvent(updated);
     toast({ title: "Zona eliminada" });
+  }
+
+  function requestDelete(type: string, id: string, name: string) {
+    setConfirmDelete({ type, id, name });
+  }
+
+  function executeDelete() {
+    if (!confirmDelete || !event) return;
+    const { type, id } = confirmDelete;
+    if (type === "zone") deleteZone(id);
+    else if (type === "activity") deleteActivity(id);
+    else if (type === "coupon") deleteCoupon(id);
+    else if (type === "product") deleteProduct(id);
+    setConfirmDelete(null);
   }
 
   function openActivityDialog(activity?: Activity) {
@@ -650,7 +665,7 @@ export default function EventDetailPage() {
                     <Button size="icon" variant="ghost" onClick={() => openActivityDialog(act)} data-testid={`button-edit-activity-${act.id}`}>
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => deleteActivity(act.id)} data-testid={`button-delete-activity-${act.id}`}>
+                    <Button size="icon" variant="ghost" onClick={() => requestDelete("activity", act.id, act.name)} data-testid={`button-delete-activity-${act.id}`}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -703,7 +718,7 @@ export default function EventDetailPage() {
                         <Button size="icon" variant="ghost" onClick={() => openZoneDialog(zone)} data-testid={`button-edit-zone-${zone.id}`}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" onClick={() => deleteZone(zone.id)} data-testid={`button-delete-zone-${zone.id}`}>
+                        <Button size="icon" variant="ghost" onClick={() => requestDelete("zone", zone.id, zone.name)} data-testid={`button-delete-zone-${zone.id}`}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -832,7 +847,7 @@ export default function EventDetailPage() {
                       <Button size="icon" variant="ghost" onClick={() => openProductDialog(product)} data-testid={`button-edit-product-${product.id}`}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => deleteProduct(product.id)} data-testid={`button-delete-product-${product.id}`}>
+                      <Button size="icon" variant="ghost" onClick={() => requestDelete("product", product.id, product.name)} data-testid={`button-delete-product-${product.id}`}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -892,7 +907,7 @@ export default function EventDetailPage() {
                       <Button size="icon" variant="ghost" onClick={() => openCouponDialog(coupon)} data-testid={`button-edit-coupon-${coupon.id}`}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => deleteCoupon(coupon.id)} data-testid={`button-delete-coupon-${coupon.id}`}>
+                      <Button size="icon" variant="ghost" onClick={() => requestDelete("coupon", coupon.id, coupon.code)} data-testid={`button-delete-coupon-${coupon.id}`}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -1067,6 +1082,24 @@ export default function EventDetailPage() {
             <Button variant="destructive" onClick={handleDeleteEvent} className="rounded-xl" data-testid="button-confirm-delete">
               <Trash2 className="w-4 h-4 mr-1" />
               Eliminar Evento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!confirmDelete} onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Confirmar eliminación</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar <span className="font-semibold text-foreground">"{confirmDelete?.name}"</span>? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDelete(null)} className="rounded-xl" data-testid="button-cancel-confirm-delete">Cancelar</Button>
+            <Button variant="destructive" onClick={executeDelete} className="rounded-xl" data-testid="button-accept-confirm-delete">
+              <Trash2 className="w-4 h-4 mr-1" />
+              Eliminar
             </Button>
           </DialogFooter>
         </DialogContent>
