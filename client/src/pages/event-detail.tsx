@@ -151,6 +151,13 @@ export default function EventDetailPage() {
     navigate("/events");
   }
 
+  function saveEventDraft() {
+    if (!event) return;
+    const updated: Event = { ...event, status: "borrador" };
+    persistEvent(updated);
+    toast({ title: "Evento guardado como borrador" });
+  }
+
   function sendToReview() {
     if (!event) return;
     const updated: Event = { ...event, status: "en_revision" };
@@ -360,16 +367,24 @@ export default function EventDetailPage() {
           )}
           <Button
             variant="outline"
-            onClick={sendToReview}
-            disabled={event.status === "en_revision"}
-            data-testid="button-send-review"
+            onClick={saveEventDraft}
+            data-testid="button-save-draft"
           >
-            <Send className="w-4 h-4 mr-2" />
-            Enviar a revisión
+            <Save className="w-4 h-4 mr-2" />
+            Guardar Evento
           </Button>
           <Button variant="outline" onClick={() => setPreviewDialog(true)} data-testid="button-preview-event">
             <Eye className="w-4 h-4 mr-2" />
             Visualizar
+          </Button>
+          <Button
+            variant="outline"
+            onClick={sendToReview}
+            disabled={event.status === "en_revision" || event.status === "publicado"}
+            data-testid="button-send-review"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Enviar a revisión
           </Button>
           <Button variant="destructive" onClick={() => setDeleteDialog(true)} data-testid="button-delete-event">
             <Trash2 className="w-4 h-4 mr-2" />
