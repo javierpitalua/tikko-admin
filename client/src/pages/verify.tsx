@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Ticket, ShieldCheck, AlertCircle, Mail, RefreshCw, Copy, CheckCircle2 } from "lucide-react";
+import { Ticket, ShieldCheck, AlertCircle, Mail, RefreshCw, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function VerifyPage() {
@@ -13,14 +13,20 @@ export default function VerifyPage() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [resent, setResent] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (!admin || !pendingToken) {
       navigate("/login");
+    } else if (!emailSent) {
+      setEmailSent(true);
+      toast({
+        title: "Código enviado",
+        description: `Hemos enviado un código de verificación a tu correo electrónico.`,
+      });
     }
-  }, [admin, pendingToken, navigate]);
+  }, [admin, pendingToken, navigate, emailSent, toast]);
 
   if (!admin || !pendingToken) {
     return null;
@@ -48,15 +54,6 @@ export default function VerifyPage() {
     setResent(true);
     toast({ title: "Token reenviado", description: `Se envió un nuevo código a ${maskedEmail}` });
     setTimeout(() => setResent(false), 10000);
-  }
-
-  function handleCopyToken() {
-    if (pendingToken) {
-      navigator.clipboard.writeText(pendingToken).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      });
-    }
   }
 
   return (
@@ -97,25 +94,15 @@ export default function VerifyPage() {
                 </div>
               </div>
 
-              {pendingToken && (
-                <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-chart-3/5 border border-primary/10">
-                  <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider font-medium">Token de simulación</p>
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 font-mono text-2xl font-bold tracking-[0.3em] text-primary" data-testid="text-token-display">
-                      {pendingToken}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleCopyToken}
-                      className="shrink-0"
-                      data-testid="button-copy-token"
-                    >
-                      {copied ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                    </Button>
+              <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-chart-3/5 border border-primary/10">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Código enviado por correo</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Revisa tu bandeja de entrada en {maskedEmail}</p>
                   </div>
                 </div>
-              )}
+              </div>
 
               {error && (
                 <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-destructive/10 text-destructive text-sm" data-testid="text-verify-error">
