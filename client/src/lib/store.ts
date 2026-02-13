@@ -71,7 +71,21 @@ export function getReservations(): Reservation[] {
     return seed;
   }
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw) as Reservation[];
+    let migrated = false;
+    const result = parsed.map((r: any) => {
+      if (!r.code || !r.createdAt) {
+        migrated = true;
+        return {
+          ...r,
+          code: r.code || generateReservationCode(),
+          createdAt: r.createdAt || new Date(r.date + "T12:00:00.000Z").toISOString(),
+        };
+      }
+      return r;
+    });
+    if (migrated) localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify(result));
+    return result;
   } catch {
     return [];
   }
@@ -234,16 +248,23 @@ function getSeedEvents(): Event[] {
 
 function getSeedReservations(): Reservation[] {
   return [
-    { id: "res-1", name: "Carlos López", email: "carlos@mail.com", phone: "5512345678", eventId: "evt-1", zoneId: "z1-2", quantity: 4, date: "2026-02-10", status: "vendido" },
-    { id: "res-2", name: "María García", email: "maria@mail.com", phone: "5598765432", eventId: "evt-1", zoneId: "z1-3", quantity: 2, date: "2026-02-11", status: "apartado" },
-    { id: "res-3", name: "Ana Martínez", email: "ana@mail.com", phone: "5511112222", eventId: "evt-2", zoneId: "z2-2", quantity: 3, date: "2026-02-12", status: "vendido" },
-    { id: "res-4", name: "Pedro Sánchez", email: "pedro@mail.com", phone: "5533334444", eventId: "evt-3", zoneId: "z3-3", quantity: 6, date: "2026-02-08", status: "apartado" },
-    { id: "res-5", name: "Laura Díaz", email: "laura@mail.com", phone: "5555556666", eventId: "evt-4", zoneId: "z4-2", quantity: 2, date: "2026-02-09", status: "vendido" },
-    { id: "res-6", name: "Roberto Flores", email: "roberto@mail.com", phone: "5577778888", eventId: "evt-2", zoneId: "z2-3", quantity: 5, date: "2026-02-07", status: "vendido" },
-    { id: "res-7", name: "Sofía Hernández", email: "sofia@mail.com", phone: "5599990000", eventId: "evt-5", zoneId: "z5-1", quantity: 3, date: "2026-02-13", status: "apartado" },
+    { id: "res-1", code: "RES-A1B2C3", name: "Carlos López", email: "carlos@mail.com", phone: "5512345678", eventId: "evt-1", zoneId: "z1-2", quantity: 4, date: "2026-02-10", createdAt: "2026-02-10T14:30:00.000Z", status: "vendido" },
+    { id: "res-2", code: "RES-D4E5F6", name: "María García", email: "maria@mail.com", phone: "5598765432", eventId: "evt-1", zoneId: "z1-3", quantity: 2, date: "2026-02-11", createdAt: new Date(Date.now() - 20 * 3600000).toISOString(), status: "apartado" },
+    { id: "res-3", code: "RES-G7H8I9", name: "Ana Martínez", email: "ana@mail.com", phone: "5511112222", eventId: "evt-2", zoneId: "z2-2", quantity: 3, date: "2026-02-12", createdAt: "2026-02-12T09:00:00.000Z", status: "vendido" },
+    { id: "res-4", code: "RES-J0K1L2", name: "Pedro Sánchez", email: "pedro@mail.com", phone: "5533334444", eventId: "evt-3", zoneId: "z3-3", quantity: 6, date: "2026-02-08", createdAt: "2026-02-08T16:45:00.000Z", status: "expirado" },
+    { id: "res-5", code: "RES-M3N4O5", name: "Laura Díaz", email: "laura@mail.com", phone: "5555556666", eventId: "evt-4", zoneId: "z4-2", quantity: 2, date: "2026-02-09", createdAt: "2026-02-09T11:20:00.000Z", status: "vendido" },
+    { id: "res-6", code: "RES-P6Q7R8", name: "Roberto Flores", email: "roberto@mail.com", phone: "5577778888", eventId: "evt-2", zoneId: "z2-3", quantity: 5, date: "2026-02-07", createdAt: "2026-02-07T08:15:00.000Z", status: "vendido" },
+    { id: "res-7", code: "RES-S9T0U1", name: "Sofía Hernández", email: "sofia@mail.com", phone: "5599990000", eventId: "evt-5", zoneId: "z5-1", quantity: 3, date: "2026-02-13", createdAt: new Date(Date.now() - 10 * 3600000).toISOString(), status: "apartado" },
   ];
 }
 
 export function generateId(): string {
   return Math.random().toString(36).substr(2, 9);
+}
+
+export function generateReservationCode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "RES-";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
 }

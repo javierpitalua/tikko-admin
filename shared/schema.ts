@@ -84,8 +84,11 @@ export interface Event {
   adminId: string;
 }
 
+export type ReservationStatus = "apartado" | "vendido" | "expirado" | "cancelado";
+
 export interface Reservation {
   id: string;
+  code: string;
   name: string;
   email: string;
   phone: string;
@@ -93,7 +96,8 @@ export interface Reservation {
   zoneId: string;
   quantity: number;
   date: string;
-  status: "apartado" | "vendido";
+  createdAt: string;
+  status: ReservationStatus;
 }
 
 export type LoginInput = z.infer<typeof loginSchema>;

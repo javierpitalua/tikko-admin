@@ -1,22 +1,62 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { reserveTicketSchema, type ReserveTicketInput } from "@shared/schema";
-import { getEvents, getReservations, saveReservations, generateId } from "@/lib/store";
+import { reserveTicketSchema, type ReserveTicketInput, type Reservation, type ReservationStatus } from "@shared/schema";
+import { getEvents, getReservations, saveReservations, generateId, generateReservationCode } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Ticket, User, Mail, Phone, Calendar, MapPin, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  Ticket, User, Mail, Phone, Calendar, MapPin, AlertCircle,
+  CheckCircle2, Copy, Clock, ChevronDown, CreditCard, XCircle,
+} from "lucide-react";
+
+const STATUS_CONFIG: Record<ReservationStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  apartado: { label: "Apartado", variant: "outline" },
+  vendido: { label: "Vendido", variant: "default" },
+  expirado: { label: "Expirado", variant: "secondary" },
+  cancelado: { label: "Cancelado", variant: "destructive" },
+};
+
+function getTimeRemaining(createdAt: string, status: ReservationStatus): { text: string; expired: boolean } {
+  if (status === "vendido") return { text: "Confirmado", expired: false };
+  if (status === "cancelado") return { text: "Cancelado", expired: true };
+  if (status === "expirado") return { text: "Expirado", expired: true };
+
+  const created = new Date(createdAt).getTime();
+  const expiresAt = created + 48 * 3600000;
+  const now = Date.now();
+  const diff = expiresAt - now;
+
+  if (diff <= 0) return { text: "Expirado", expired: true };
+
+  const hours = Math.floor(diff / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  if (hours > 0) return { text: `${hours}h ${minutes}m`, expired: false };
+  return { text: `${minutes}m`, expired: false };
+}
 
 export default function ReservePage() {
   const { toast } = useToast();
   const events = getEvents();
   const [reservations, setReservations] = useState(getReservations());
-  const [success, setSuccess] = useState(false);
+  const [lastReservation, setLastReservation] = useState<Reservation | null>(null);
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const form = useForm<ReserveTicketInput>({
     resolver: zodResolver(reserveTicketSchema),
@@ -41,10 +81,10 @@ export default function ReservePage() {
   }, [selectedEvent]);
 
   function onSubmit(data: ReserveTicketInput) {
-    setSuccess(false);
+    setLastReservation(null);
 
     const userReservationsForEvent = reservations.filter(
-      (r) => r.email === data.email && r.eventId === data.eventId
+      (r) => r.email === data.email && r.eventId === data.eventId && (r.status === "apartado" || r.status === "vendido")
     );
     const totalExisting = userReservationsForEvent.reduce((sum, r) => sum + r.quantity, 0);
 
@@ -65,25 +105,42 @@ export default function ReservePage() {
       return;
     }
 
-    const newReservation = {
+    const now = new Date();
+    const newReservation: Reservation = {
       id: generateId(),
+      code: generateReservationCode(),
       name: data.name,
       email: data.email,
       phone: data.phone,
       eventId: data.eventId,
       zoneId: data.zoneId,
       quantity: data.quantity,
-      date: new Date().toISOString().split("T")[0],
-      status: "apartado" as const,
+      date: now.toISOString().split("T")[0],
+      createdAt: now.toISOString(),
+      status: "apartado",
     };
 
     const updatedReservations = [...reservations, newReservation];
     saveReservations(updatedReservations);
     setReservations(updatedReservations);
+    setLastReservation(newReservation);
 
-    setSuccess(true);
     toast({ title: "Boletos apartados con éxito" });
     form.reset();
+  }
+
+  function updateReservationStatus(id: string, newStatus: ReservationStatus) {
+    const updated = reservations.map((r) =>
+      r.id === id ? { ...r, status: newStatus } : r
+    );
+    saveReservations(updated);
+    setReservations(updated);
+    toast({ title: `Estado actualizado a "${STATUS_CONFIG[newStatus].label}"` });
+  }
+
+  function copyCode(code: string) {
+    navigator.clipboard.writeText(code);
+    toast({ title: "Código copiado al portapapeles" });
   }
 
   const subtotal = selectedZone ? selectedZone.price * (form.watch("quantity") || 0) : 0;
@@ -96,20 +153,13 @@ export default function ReservePage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Datos de Reservación</CardTitle>
               <CardDescription>Completa todos los campos para apartar tus boletos</CardDescription>
             </CardHeader>
             <CardContent>
-              {success && (
-                <div className="flex items-center gap-2 p-4 mb-6 rounded-md bg-chart-2/10 text-chart-2" data-testid="text-reserve-success">
-                  <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <p className="text-sm font-medium">Boletos apartados correctamente. Recibirás un correo de confirmación.</p>
-                </div>
-              )}
-
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -253,6 +303,48 @@ export default function ReservePage() {
               </Form>
             </CardContent>
           </Card>
+
+          {lastReservation && (
+            <Card className="border-primary/30 bg-primary/5" data-testid="card-reservation-confirmation">
+              <CardContent className="p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                  <h3 className="font-semibold text-lg">Reservación Creada</h3>
+                </div>
+                <div className="flex items-center gap-3 p-4 rounded-md bg-background border border-border">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Código de reserva</p>
+                    <p className="text-2xl font-mono font-bold tracking-wider mt-1" data-testid="text-reservation-code">{lastReservation.code}</p>
+                  </div>
+                  <Button size="icon" variant="outline" onClick={() => copyCode(lastReservation.code)} data-testid="button-copy-code">
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Evento</p>
+                    <p className="font-medium">{events.find((e) => e.id === lastReservation.eventId)?.name}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Boletos</p>
+                    <p className="font-medium">{lastReservation.quantity}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Estado</p>
+                    <Badge variant="outline">Apartado</Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Expira en</p>
+                    <p className="font-medium flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" />
+                      48 horas
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">Tienes 48 horas para confirmar el pago antes de que la reservación expire automáticamente.</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -275,19 +367,19 @@ export default function ReservePage() {
                 </div>
                 {selectedZone && (
                   <div className="p-3 rounded-md bg-accent/50 space-y-2">
-                    <div className="flex items-center justify-between gap-2 text-sm">
+                    <div className="flex items-center justify-between gap-3 flex-wrap text-sm">
                       <span className="text-muted-foreground">Zona:</span>
                       <span className="font-medium">{selectedZone.name}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-2 text-sm">
+                    <div className="flex items-center justify-between gap-3 flex-wrap text-sm">
                       <span className="text-muted-foreground">Precio unitario:</span>
                       <span className="font-medium">${selectedZone.price.toLocaleString("es-MX")}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-2 text-sm">
+                    <div className="flex items-center justify-between gap-3 flex-wrap text-sm">
                       <span className="text-muted-foreground">Cantidad:</span>
                       <span className="font-medium">{form.watch("quantity") || 0}</span>
                     </div>
-                    <div className="border-t border-border pt-2 flex items-center justify-between gap-2">
+                    <div className="border-t border-border pt-2 flex items-center justify-between gap-3 flex-wrap">
                       <span className="font-medium">Subtotal:</span>
                       <span className="text-lg font-bold text-primary">${subtotal.toLocaleString("es-MX")}</span>
                     </div>
@@ -316,33 +408,97 @@ export default function ReservePage() {
       {reservations.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Reservaciones Realizadas</CardTitle>
+            <CardTitle className="text-base">Reservaciones Realizadas ({reservations.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Nombre</th>
-                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Evento</th>
-                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Cantidad</th>
-                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Fecha</th>
-                    <th className="text-left py-2 font-medium text-muted-foreground">Estado</th>
+                  <tr className="border-b border-border bg-accent/30">
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Código</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Nombre</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Evento</th>
+                    <th className="text-center py-3 px-3 font-medium text-muted-foreground">Cantidad</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Fecha</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Tiempo restante</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Estado</th>
+                    <th className="text-right py-3 px-3 font-medium text-muted-foreground">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {reservations.slice(-10).reverse().map((r) => {
+                  {reservations.slice().reverse().map((r) => {
                     const evt = events.find((e) => e.id === r.eventId);
+                    const remaining = getTimeRemaining(r.createdAt, r.status);
+                    const cfg = STATUS_CONFIG[r.status];
                     return (
                       <tr key={r.id} className="border-b border-border last:border-0" data-testid={`row-reservation-${r.id}`}>
-                        <td className="py-2 pr-4">{r.name}</td>
-                        <td className="py-2 pr-4">{evt?.name || "N/A"}</td>
-                        <td className="py-2 pr-4">{r.quantity}</td>
-                        <td className="py-2 pr-4">{r.date}</td>
-                        <td className="py-2">
-                          <Badge variant={r.status === "vendido" ? "default" : "secondary"}>
-                            {r.status === "vendido" ? "Vendido" : "Apartado"}
-                          </Badge>
+                        <td className="py-3 px-3">
+                          <code className="font-mono text-xs font-semibold" data-testid={`text-code-${r.id}`}>{r.code}</code>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div>
+                            <p className="font-medium">{r.name}</p>
+                            <p className="text-xs text-muted-foreground">{r.email}</p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-3">{evt?.name || "N/A"}</td>
+                        <td className="py-3 px-3 text-center">{r.quantity}</td>
+                        <td className="py-3 px-3 text-muted-foreground">{r.date}</td>
+                        <td className="py-3 px-3">
+                          <span className={`flex items-center gap-1.5 text-xs font-medium ${remaining.expired ? "text-muted-foreground" : "text-primary"}`}>
+                            <Clock className="w-3.5 h-3.5" />
+                            {remaining.text}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="gap-1 px-2" data-testid={`button-status-${r.id}`}>
+                                <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                                <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                              {(Object.entries(STATUS_CONFIG) as [ReservationStatus, typeof cfg][]).map(([key, val]) => (
+                                <DropdownMenuItem
+                                  key={key}
+                                  onClick={() => updateReservationStatus(r.id, key)}
+                                  data-testid={`menu-status-${key}-${r.id}`}
+                                >
+                                  <Badge variant={val.variant} className="mr-2">{val.label}</Badge>
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="flex items-center justify-end gap-1">
+                            {r.status === "apartado" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => updateReservationStatus(r.id, "vendido")}
+                                  data-testid={`button-confirm-${r.id}`}
+                                >
+                                  <CreditCard className="w-3.5 h-3.5 mr-1" />
+                                  Confirmar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => updateReservationStatus(r.id, "cancelado")}
+                                  data-testid={`button-cancel-${r.id}`}
+                                >
+                                  <XCircle className="w-3.5 h-3.5 mr-1" />
+                                  Cancelar
+                                </Button>
+                              </>
+                            )}
+                            {r.status !== "apartado" && (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
