@@ -46,7 +46,8 @@ export interface Zone {
 export interface Activity {
   id: string;
   name: string;
-  time: string;
+  startTime: string;
+  endTime: string;
   description: string;
 }
 
@@ -67,7 +68,8 @@ export interface Product {
 export interface Event {
   id: string;
   name: string;
-  date: string;
+  startDate: string;
+  endDate: string;
   location: string;
   description: string;
   image: string;

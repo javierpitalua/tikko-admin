@@ -29,7 +29,7 @@ export default function EventDetailPage() {
 
   const [event, setEvent] = useState<Event | null>(null);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState({ name: "", date: "", location: "", category: "", description: "", image: "" });
+  const [draft, setDraft] = useState({ name: "", startDate: "", endDate: "", location: "", category: "", description: "", image: "" });
 
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -42,7 +42,7 @@ export default function EventDetailPage() {
   const [deleteDialog, setDeleteDialog] = useState(false);
 
   const [zoneForm, setZoneForm] = useState({ name: "", capacity: "", price: "" });
-  const [activityForm, setActivityForm] = useState({ name: "", time: "", description: "" });
+  const [activityForm, setActivityForm] = useState({ name: "", startTime: "", endTime: "", description: "" });
   const [couponForm, setCouponForm] = useState({ code: "", discount: "", active: true });
   const [productForm, setProductForm] = useState({ name: "", price: "", available: true });
 
@@ -53,7 +53,8 @@ export default function EventDetailPage() {
       setEvent(found);
       setDraft({
         name: found.name,
-        date: found.date,
+        startDate: found.startDate,
+        endDate: found.endDate,
         location: found.location,
         category: found.category,
         description: found.description,
@@ -81,7 +82,8 @@ export default function EventDetailPage() {
   function startEditing() {
     setDraft({
       name: event!.name,
-      date: event!.date,
+      startDate: event!.startDate,
+      endDate: event!.endDate,
       location: event!.location,
       category: event!.category,
       description: event!.description,
@@ -93,7 +95,8 @@ export default function EventDetailPage() {
   function cancelEditing() {
     setDraft({
       name: event!.name,
-      date: event!.date,
+      startDate: event!.startDate,
+      endDate: event!.endDate,
       location: event!.location,
       category: event!.category,
       description: event!.description,
@@ -104,14 +107,15 @@ export default function EventDetailPage() {
 
   function saveBasicInfo() {
     if (!event) return;
-    if (!draft.name.trim() || !draft.date || !draft.location.trim() || !draft.category) {
+    if (!draft.name.trim() || !draft.startDate || !draft.endDate || !draft.location.trim() || !draft.category) {
       toast({ title: "Completa todos los campos obligatorios", variant: "destructive" });
       return;
     }
     const updated: Event = {
       ...event,
       name: draft.name.trim(),
-      date: draft.date,
+      startDate: draft.startDate,
+      endDate: draft.endDate,
       location: draft.location.trim(),
       category: draft.category,
       description: draft.description.trim(),
@@ -188,28 +192,29 @@ export default function EventDetailPage() {
   function openActivityDialog(activity?: Activity) {
     if (activity) {
       setEditingActivity(activity);
-      setActivityForm({ name: activity.name, time: activity.time, description: activity.description });
+      setActivityForm({ name: activity.name, startTime: activity.startTime, endTime: activity.endTime, description: activity.description });
     } else {
       setEditingActivity(null);
-      setActivityForm({ name: "", time: "", description: "" });
+      setActivityForm({ name: "", startTime: "", endTime: "", description: "" });
     }
     setActivityDialog(true);
   }
 
   function saveActivity() {
-    if (!event || !activityForm.name || !activityForm.time) return;
+    if (!event || !activityForm.name || !activityForm.startTime || !activityForm.endTime) return;
     const updated = { ...event };
     if (editingActivity) {
       updated.activities = updated.activities.map((a) =>
         a.id === editingActivity.id
-          ? { ...a, name: activityForm.name, time: activityForm.time, description: activityForm.description }
+          ? { ...a, name: activityForm.name, startTime: activityForm.startTime, endTime: activityForm.endTime, description: activityForm.description }
           : a
       );
     } else {
       updated.activities = [...updated.activities, {
         id: generateId(),
         name: activityForm.name,
-        time: activityForm.time,
+        startTime: activityForm.startTime,
+        endTime: activityForm.endTime,
         description: activityForm.description,
       }];
     }
@@ -348,7 +353,7 @@ export default function EventDetailPage() {
               <div className="flex items-center gap-4 mt-2 flex-wrap">
                 <span className="flex items-center gap-1.5 text-sm text-white/80">
                   <Calendar className="w-4 h-4" />
-                  {new Date(event.date).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}
+                  {new Date(event.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })} - {new Date(event.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
                 </span>
                 <span className="flex items-center gap-1.5 text-sm text-white/80">
                   <MapPin className="w-4 h-4" />
@@ -427,14 +432,25 @@ export default function EventDetailPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Fecha</Label>
+                    <Label>Fecha de inicio</Label>
                     <Input
                       type="date"
-                      value={draft.date}
-                      onChange={(e) => setDraft({ ...draft, date: e.target.value })}
-                      data-testid="input-event-date"
+                      value={draft.startDate}
+                      onChange={(e) => setDraft({ ...draft, startDate: e.target.value })}
+                      data-testid="input-event-start-date"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label>Fecha de fin</Label>
+                    <Input
+                      type="date"
+                      value={draft.endDate}
+                      onChange={(e) => setDraft({ ...draft, endDate: e.target.value })}
+                      data-testid="input-event-end-date"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Categoría</Label>
                     <Select value={draft.category} onValueChange={(val) => setDraft({ ...draft, category: val })}>
@@ -524,10 +540,17 @@ export default function EventDetailPage() {
                     <Badge variant="secondary">{event.category}</Badge>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Fecha</p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Fecha de inicio</p>
                     <p className="flex items-center gap-1.5 text-sm">
                       <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                      {new Date(event.date).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}
+                      {new Date(event.startDate).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Fecha de fin</p>
+                    <p className="flex items-center gap-1.5 text-sm">
+                      <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                      {new Date(event.endDate).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}
                     </p>
                   </div>
                   <div className="space-y-1">
@@ -568,7 +591,7 @@ export default function EventDetailPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="font-medium">{act.name}</p>
-                      <p className="text-sm text-muted-foreground">{act.time} - {act.description}</p>
+                      <p className="text-sm text-muted-foreground">{act.startTime} - {act.endTime} | {act.description}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -856,9 +879,15 @@ export default function EventDetailPage() {
               <Label>Nombre</Label>
               <Input value={activityForm.name} onChange={(e) => setActivityForm({ ...activityForm, name: e.target.value })} placeholder="Ej: Meet & Greet" data-testid="input-activity-name" />
             </div>
-            <div className="space-y-2">
-              <Label>Hora</Label>
-              <Input value={activityForm.time} onChange={(e) => setActivityForm({ ...activityForm, time: e.target.value })} placeholder="Ej: 14:00" data-testid="input-activity-time" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Hora de inicio</Label>
+                <Input type="time" value={activityForm.startTime} onChange={(e) => setActivityForm({ ...activityForm, startTime: e.target.value })} data-testid="input-activity-start-time" />
+              </div>
+              <div className="space-y-2">
+                <Label>Hora de fin</Label>
+                <Input type="time" value={activityForm.endTime} onChange={(e) => setActivityForm({ ...activityForm, endTime: e.target.value })} data-testid="input-activity-end-time" />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Descripción</Label>

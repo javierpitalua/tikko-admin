@@ -94,7 +94,7 @@ export default function EventsPage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-3.5 h-3.5 shrink-0" />
-                    <span>{new Date(event.date).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}</span>
+                    <span>{new Date(event.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })} - {new Date(event.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="w-3.5 h-3.5 shrink-0" />

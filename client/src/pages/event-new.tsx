@@ -16,7 +16,8 @@ import { ArrowLeft, Save } from "lucide-react";
 
 const newEventSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
-  date: z.string().min(1, "La fecha es requerida"),
+  startDate: z.string().min(1, "La fecha de inicio es requerida"),
+  endDate: z.string().min(1, "La fecha de fin es requerida"),
   location: z.string().min(3, "La ubicación es requerida"),
   description: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
   category: z.string().min(1, "Selecciona una categoría"),
@@ -38,7 +39,7 @@ export default function EventNewPage() {
 
   const form = useForm<NewEventInput>({
     resolver: zodResolver(newEventSchema),
-    defaultValues: { name: "", date: "", location: "", description: "", category: "" },
+    defaultValues: { name: "", startDate: "", endDate: "", location: "", description: "", category: "" },
   });
 
   function onSubmit(data: NewEventInput) {
@@ -46,7 +47,8 @@ export default function EventNewPage() {
     const newEvent = {
       id: generateId(),
       name: data.name,
-      date: data.date,
+      startDate: data.startDate,
+      endDate: data.endDate,
       location: data.location,
       description: data.description,
       image: defaultImages[Math.floor(Math.random() * defaultImages.length)],
@@ -85,13 +87,22 @@ export default function EventNewPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={form.control} name="date" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fecha</FormLabel>
-                  <FormControl><Input {...field} type="date" data-testid="input-event-date" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField control={form.control} name="startDate" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fecha de inicio</FormLabel>
+                    <FormControl><Input {...field} type="date" data-testid="input-event-start-date" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="endDate" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fecha de fin</FormLabel>
+                    <FormControl><Input {...field} type="date" data-testid="input-event-end-date" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
               <FormField control={form.control} name="location" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Ubicación</FormLabel>

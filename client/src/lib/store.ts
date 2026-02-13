@@ -44,16 +44,19 @@ export function saveAdmin(admin: Admin) {
 
 export function getEvents(): Event[] {
   const raw = localStorage.getItem(STORAGE_KEYS.EVENTS);
-  if (!raw) {
-    const seed = getSeedEvents();
-    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(seed));
-    return seed;
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.length > 0 && ('date' in parsed[0] || !('startDate' in parsed[0]))) {
+        localStorage.removeItem(STORAGE_KEYS.EVENTS);
+      } else {
+        return parsed;
+      }
+    } catch {}
   }
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
+  const seed = getSeedEvents();
+  localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(seed));
+  return seed;
 }
 
 export function saveEvents(events: Event[]) {
@@ -83,7 +86,8 @@ function getSeedEvents(): Event[] {
     {
       id: "evt-1",
       name: "Festival de Rock 2026",
-      date: "2026-04-15",
+      startDate: "2026-04-15",
+      endDate: "2026-04-17",
       location: "Arena Ciudad de México",
       description: "El festival de rock más grande de Latinoamérica con bandas nacionales e internacionales.",
       image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=400&fit=crop",
@@ -94,8 +98,8 @@ function getSeedEvents(): Event[] {
         { id: "z1-3", name: "General", capacity: 2000, price: 800, sold: 1450 },
       ],
       activities: [
-        { id: "a1-1", name: "Meet & Greet", time: "14:00", description: "Conoce a los artistas" },
-        { id: "a1-2", name: "Banda Principal", time: "20:00", description: "Presentación estelar" },
+        { id: "a1-1", name: "Meet & Greet", startTime: "14:00", endTime: "15:30", description: "Conoce a los artistas" },
+        { id: "a1-2", name: "Banda Principal", startTime: "20:00", endTime: "23:00", description: "Presentación estelar" },
       ],
       coupons: [
         { id: "c1-1", code: "ROCK20", discount: 20, active: true },
@@ -112,7 +116,8 @@ function getSeedEvents(): Event[] {
     {
       id: "evt-2",
       name: "Conferencia Tech Summit",
-      date: "2026-05-22",
+      startDate: "2026-05-22",
+      endDate: "2026-05-24",
       location: "Centro Banamex",
       description: "Conferencia de tecnología e innovación con speakers internacionales.",
       image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&h=400&fit=crop",
@@ -123,9 +128,9 @@ function getSeedEvents(): Event[] {
         { id: "z2-3", name: "Standard", capacity: 1000, price: 1200, sold: 650 },
       ],
       activities: [
-        { id: "a2-1", name: "Keynote IA", time: "10:00", description: "El futuro de la inteligencia artificial" },
-        { id: "a2-2", name: "Workshop Cloud", time: "14:00", description: "Taller práctico de cloud computing" },
-        { id: "a2-3", name: "Networking", time: "18:00", description: "Sesión de networking" },
+        { id: "a2-1", name: "Keynote IA", startTime: "10:00", endTime: "12:00", description: "El futuro de la inteligencia artificial" },
+        { id: "a2-2", name: "Workshop Cloud", startTime: "14:00", endTime: "17:00", description: "Taller práctico de cloud computing" },
+        { id: "a2-3", name: "Networking", startTime: "18:00", endTime: "20:00", description: "Sesión de networking" },
       ],
       coupons: [
         { id: "c2-1", code: "TECH30", discount: 30, active: true },
@@ -140,7 +145,8 @@ function getSeedEvents(): Event[] {
     {
       id: "evt-3",
       name: "Copa de Futbol Invitacional",
-      date: "2026-06-10",
+      startDate: "2026-06-10",
+      endDate: "2026-06-15",
       location: "Estadio Azteca",
       description: "Torneo de futbol con equipos de toda la república.",
       image: "https://images.unsplash.com/photo-1459865264687-595d652de67e?w=600&h=400&fit=crop",
@@ -151,8 +157,8 @@ function getSeedEvents(): Event[] {
         { id: "z3-3", name: "Sol", capacity: 3000, price: 500, sold: 2100 },
       ],
       activities: [
-        { id: "a3-1", name: "Ceremonia apertura", time: "09:00", description: "Ceremonia de apertura del torneo" },
-        { id: "a3-2", name: "Final", time: "17:00", description: "Partido de la final" },
+        { id: "a3-1", name: "Ceremonia apertura", startTime: "09:00", endTime: "10:30", description: "Ceremonia de apertura del torneo" },
+        { id: "a3-2", name: "Final", startTime: "17:00", endTime: "19:00", description: "Partido de la final" },
       ],
       coupons: [
         { id: "c3-1", code: "GOL15", discount: 15, active: true },
@@ -169,7 +175,8 @@ function getSeedEvents(): Event[] {
     {
       id: "evt-4",
       name: "Expo Gastronomía",
-      date: "2026-07-05",
+      startDate: "2026-07-05",
+      endDate: "2026-07-07",
       location: "Expo Guadalajara",
       description: "Experiencia culinaria con los mejores chefs del país y degustaciones.",
       image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop",
@@ -180,8 +187,8 @@ function getSeedEvents(): Event[] {
         { id: "z4-3", name: "Acceso General", capacity: 1500, price: 650, sold: 980 },
       ],
       activities: [
-        { id: "a4-1", name: "Masterclass", time: "11:00", description: "Clase magistral de cocina mexicana" },
-        { id: "a4-2", name: "Degustación", time: "15:00", description: "Degustación de platillos" },
+        { id: "a4-1", name: "Masterclass", startTime: "11:00", endTime: "13:00", description: "Clase magistral de cocina mexicana" },
+        { id: "a4-2", name: "Degustación", startTime: "15:00", endTime: "17:00", description: "Degustación de platillos" },
       ],
       coupons: [
         { id: "c4-1", code: "FOODIE25", discount: 25, active: true },
@@ -196,7 +203,8 @@ function getSeedEvents(): Event[] {
     {
       id: "evt-5",
       name: "Festival de Cine Independiente",
-      date: "2026-08-20",
+      startDate: "2026-08-20",
+      endDate: "2026-08-24",
       location: "Cineteca Nacional",
       description: "Proyecciones de cine independiente nacional e internacional.",
       image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&h=400&fit=crop",
@@ -206,8 +214,8 @@ function getSeedEvents(): Event[] {
         { id: "z5-2", name: "Sala Alterna", capacity: 150, price: 250, sold: 100 },
       ],
       activities: [
-        { id: "a5-1", name: "Proyección inaugural", time: "10:00", description: "Película de apertura" },
-        { id: "a5-2", name: "Q&A con directores", time: "16:00", description: "Sesión con directores invitados" },
+        { id: "a5-1", name: "Proyección inaugural", startTime: "10:00", endTime: "12:30", description: "Película de apertura" },
+        { id: "a5-2", name: "Q&A con directores", startTime: "16:00", endTime: "17:30", description: "Sesión con directores invitados" },
       ],
       coupons: [],
       products: [

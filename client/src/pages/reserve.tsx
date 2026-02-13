@@ -266,7 +266,7 @@ export default function ReservePage() {
                 <div className="space-y-1.5 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 shrink-0" />
-                    {new Date(selectedEvent.date).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}
+                    {new Date(selectedEvent.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })} - {new Date(selectedEvent.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="w-3.5 h-3.5 shrink-0" />
