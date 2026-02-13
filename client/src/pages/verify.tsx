@@ -45,18 +45,18 @@ export default function VerifyPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center auth-gradient p-4">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center justify-center w-16 h-16 rounded-md bg-primary mb-4">
-            <Ticket className="w-8 h-8 text-primary-foreground" />
+          <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-chart-3 mb-4 shadow-lg">
+            <Ticket className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Verificación</h1>
-          <p className="text-muted-foreground mt-1">Un paso más para acceder</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Verificación</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Un paso más para acceder</p>
         </div>
 
         <Card>
-          <CardHeader className="space-y-1">
+          <CardHeader className="space-y-1 pb-4">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-primary" />
               <CardTitle className="text-xl">Verifica tu identidad</CardTitle>
@@ -67,7 +67,9 @@ export default function VerifyPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center gap-3 p-4 rounded-md bg-accent/50 border border-border">
-              <Mail className="w-5 h-5 text-muted-foreground shrink-0" />
+              <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 shrink-0">
+                <Mail className="w-4 h-4 text-primary" />
+              </div>
               <div className="text-sm">
                 <p className="text-muted-foreground">Código enviado a:</p>
                 <p className="font-medium text-foreground" data-testid="text-masked-email">{maskedEmail}</p>

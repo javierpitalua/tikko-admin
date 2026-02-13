@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MapPin, Calendar, Users, Plus } from "lucide-react";
 
+const STATUS_LABELS: Record<string, string> = {
+  borrador: "Borrador",
+  en_revision: "En revisión",
+  publicado: "Publicado",
+};
+
 export default function EventsPage() {
   const [, navigate] = useLocation();
   const events = getEvents();
@@ -27,7 +33,7 @@ export default function EventsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-foreground" data-testid="text-events-title">Eventos</h1>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight" data-testid="text-events-title">Eventos</h1>
           <p className="text-muted-foreground mt-1">{events.length} eventos registrados</p>
         </div>
         <Button onClick={() => navigate("/events/new")} data-testid="button-new-event">
@@ -73,17 +79,25 @@ export default function EventsPage() {
               onClick={() => navigate(`/events/${event.id}`)}
               data-testid={`card-event-${event.id}`}
             >
-              <div className="aspect-[16/9] overflow-hidden rounded-t-md">
+              <div className="aspect-[16/9] overflow-hidden rounded-t-md relative">
                 <img
                   src={event.image}
                   alt={event.name}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
+                <div className="absolute top-2 right-2">
+                  <Badge
+                    variant={event.status === "publicado" ? "default" : "secondary"}
+                    className="text-xs"
+                  >
+                    {STATUS_LABELS[event.status] || event.status}
+                  </Badge>
+                </div>
               </div>
               <CardContent className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-2 flex-wrap">
                   <h3
-                    className="font-semibold text-foreground leading-snug line-clamp-2 cursor-pointer hover:underline underline-offset-2"
+                    className="font-semibold text-foreground leading-snug line-clamp-2 cursor-pointer"
                     data-testid={`link-event-${event.id}`}
                   >
                     {event.name}
@@ -106,9 +120,9 @@ export default function EventsPage() {
                   </div>
                 </div>
 
-                <div className="h-1.5 rounded-md bg-muted overflow-hidden">
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                   <div
-                    className="h-full rounded-md bg-primary transition-all"
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-chart-3 transition-all"
                     style={{ width: `${pct}%` }}
                   />
                 </div>

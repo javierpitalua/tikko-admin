@@ -31,18 +31,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center auth-gradient p-4">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center justify-center w-16 h-16 rounded-md bg-primary mb-4">
-            <Ticket className="w-8 h-8 text-primary-foreground" />
+          <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-chart-3 mb-4 shadow-lg">
+            <Ticket className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">EventTicket Admin</h1>
-          <p className="text-muted-foreground mt-1">Plataforma de gestión de eventos</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">EventTicket Admin</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Plataforma de gestión de eventos</p>
         </div>
 
         <Card>
-          <CardHeader className="space-y-1">
+          <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl">Iniciar Sesión</CardTitle>
             <CardDescription>Ingresa tus credenciales para acceder al panel</CardDescription>
           </CardHeader>
@@ -50,7 +50,8 @@ export default function LoginPage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {error && (
-                  <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm" data-testid="text-login-error">
+                  <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm flex items-center gap-2" data-testid="text-login-error">
+                    <div className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
                     {error}
                   </div>
                 )}

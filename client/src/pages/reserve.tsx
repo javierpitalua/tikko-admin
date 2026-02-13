@@ -148,7 +148,7 @@ export default function ReservePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground" data-testid="text-reserve-title">Apartar Boletos</h1>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight" data-testid="text-reserve-title">Apartar Boletos</h1>
         <p className="text-muted-foreground mt-1">Reserva boletos para los eventos disponibles</p>
       </div>
 

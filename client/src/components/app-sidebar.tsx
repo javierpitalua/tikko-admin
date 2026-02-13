@@ -39,11 +39,11 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary shrink-0">
-            <Ticket className="w-5 h-5 text-primary-foreground" />
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-chart-3 shrink-0">
+            <Ticket className="w-5 h-5 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-sm truncate">EventTicket</p>
+            <p className="font-bold text-sm tracking-tight truncate">EventTicket</p>
             <p className="text-xs text-muted-foreground truncate">Panel Admin</p>
           </div>
         </div>
@@ -78,7 +78,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <div className="flex items-center gap-3">
           <Avatar className="w-9 h-9 shrink-0">
-            <AvatarFallback className="text-xs bg-accent">{initials}</AvatarFallback>
+            <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{admin?.name || "Admin"}</p>
