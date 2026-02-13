@@ -65,6 +65,8 @@ export interface Product {
   available: boolean;
 }
 
+export type EventStatus = "borrador" | "en_revision" | "publicado";
+
 export interface Event {
   id: string;
   name: string;
@@ -74,6 +76,7 @@ export interface Event {
   description: string;
   image: string;
   category: string;
+  status: EventStatus;
   zones: Zone[];
   activities: Activity[];
   coupons: Coupon[];

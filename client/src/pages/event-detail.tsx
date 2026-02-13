@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { getEvents, saveEvents, generateId } from "@/lib/store";
-import type { Event, Zone, Activity, Coupon, Product } from "@shared/schema";
+import type { Event, Zone, Activity, Coupon, Product, EventStatus } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import {
   ArrowLeft, MapPin, Calendar, Edit2, Plus, Trash2,
   Ticket, Clock, Tag, Save, Users, Image as ImageIcon,
   Upload, X, FileText, DollarSign, ShoppingBag, Building, Package,
+  Send, Eye,
 } from "lucide-react";
 
 const CATEGORIES = ["Música", "Tecnología", "Deportes", "Gastronomía", "Cultura", "Teatro", "Arte", "Otro"];
@@ -40,6 +41,8 @@ export default function EventDetailPage() {
   const [couponDialog, setCouponDialog] = useState(false);
   const [productDialog, setProductDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const [previewDialog, setPreviewDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState("basic");
 
   const [zoneForm, setZoneForm] = useState({ name: "", capacity: "", price: "" });
   const [activityForm, setActivityForm] = useState({ name: "", startTime: "", endTime: "", description: "" });
@@ -147,6 +150,25 @@ export default function EventDetailPage() {
     toast({ title: "Evento eliminado" });
     navigate("/events");
   }
+
+  function sendToReview() {
+    if (!event) return;
+    const updated: Event = { ...event, status: "en_revision" };
+    persistEvent(updated);
+    toast({ title: "Evento enviado a revisión" });
+  }
+
+  const STATUS_LABELS: Record<EventStatus, string> = {
+    borrador: "Borrador",
+    en_revision: "En revisión",
+    publicado: "Publicado",
+  };
+
+  const STATUS_VARIANT: Record<EventStatus, "secondary" | "default" | "outline"> = {
+    borrador: "secondary",
+    en_revision: "outline",
+    publicado: "default",
+  };
 
   function openZoneDialog(zone?: Zone) {
     if (zone) {
@@ -321,13 +343,34 @@ export default function EventDetailPage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Volver a eventos
         </Button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge variant={STATUS_VARIANT[event.status]} data-testid="badge-event-status">
+            {STATUS_LABELS[event.status]}
+          </Badge>
           {!editing && (
-            <Button variant="outline" onClick={startEditing} data-testid="button-edit-event">
+            <Button
+              variant="outline"
+              onClick={startEditing}
+              disabled={activeTab !== "basic"}
+              data-testid="button-edit-event"
+            >
               <Edit2 className="w-4 h-4 mr-2" />
               Editar Evento
             </Button>
           )}
+          <Button
+            variant="outline"
+            onClick={sendToReview}
+            disabled={event.status === "en_revision"}
+            data-testid="button-send-review"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Enviar a revisión
+          </Button>
+          <Button variant="outline" onClick={() => setPreviewDialog(true)} data-testid="button-preview-event">
+            <Eye className="w-4 h-4 mr-2" />
+            Visualizar
+          </Button>
           <Button variant="destructive" onClick={() => setDeleteDialog(true)} data-testid="button-delete-event">
             <Trash2 className="w-4 h-4 mr-2" />
             Eliminar
@@ -385,7 +428,7 @@ export default function EventDetailPage() {
         <p className="text-muted-foreground leading-relaxed" data-testid="text-event-description">{event.description}</p>
       )}
 
-      <Tabs defaultValue="basic" className="w-full">
+      <Tabs defaultValue="basic" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full justify-start flex-wrap gap-1">
           <TabsTrigger value="basic" data-testid="tab-basic">
             <FileText className="w-4 h-4 mr-1.5" />
@@ -978,6 +1021,102 @@ export default function EventDetailPage() {
               <Trash2 className="w-4 h-4 mr-1" />
               Eliminar Evento
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={previewDialog} onOpenChange={setPreviewDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Vista previa del evento</DialogTitle>
+            <DialogDescription>Así verán los clientes tu evento</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="relative rounded-md overflow-hidden">
+              <div className="aspect-[16/9]">
+                <img src={event.image} alt={event.name} className="w-full h-full object-cover" />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <Badge variant="secondary" className="mb-2">{event.category}</Badge>
+                <h2 className="text-2xl font-bold text-white">{event.name}</h2>
+                <div className="flex items-center gap-4 mt-2 flex-wrap">
+                  <span className="flex items-center gap-1.5 text-sm text-white/80">
+                    <Calendar className="w-4 h-4" />
+                    {new Date(event.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "long" })} - {new Date(event.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-sm text-white/80">
+                    <MapPin className="w-4 h-4" />
+                    {event.location}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {event.description && (
+              <p className="text-muted-foreground leading-relaxed">{event.description}</p>
+            )}
+
+            {event.activities.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Actividades</h3>
+                <div className="space-y-2">
+                  {event.activities.map((act) => (
+                    <div key={act.id} className="flex items-center gap-3 p-3 rounded-md bg-accent/30">
+                      <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <div>
+                        <p className="font-medium text-sm">{act.name}</p>
+                        <p className="text-xs text-muted-foreground">{act.startTime} - {act.endTime} | {act.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {event.zones.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Zonas y Precios</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {event.zones.map((zone) => {
+                    const remaining = zone.capacity - zone.sold;
+                    return (
+                      <Card key={zone.id}>
+                        <CardContent className="p-4 space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-semibold">{zone.name}</p>
+                            <p className="text-lg font-bold">${zone.price.toLocaleString("es-MX")}</p>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {remaining > 0 ? `${remaining.toLocaleString()} lugares disponibles` : "Agotado"}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {(event.products || []).length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Productos</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(event.products || []).filter(p => p.available).map((product) => (
+                    <div key={product.id} className="flex items-center gap-3 p-3 rounded-md bg-accent/30">
+                      <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{product.name}</p>
+                      </div>
+                      <p className="font-bold text-sm">${product.price.toLocaleString("es-MX")}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewDialog(false)}>Cerrar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

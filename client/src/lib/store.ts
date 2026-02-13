@@ -47,7 +47,7 @@ export function getEvents(): Event[] {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      if (parsed.length > 0 && ('date' in parsed[0] || !('startDate' in parsed[0]))) {
+      if (parsed.length > 0 && ('date' in parsed[0] || !('startDate' in parsed[0]) || !('status' in parsed[0]))) {
         localStorage.removeItem(STORAGE_KEYS.EVENTS);
       } else {
         return parsed;
@@ -92,6 +92,7 @@ function getSeedEvents(): Event[] {
       description: "El festival de rock más grande de Latinoamérica con bandas nacionales e internacionales.",
       image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=400&fit=crop",
       category: "Música",
+      status: "publicado",
       zones: [
         { id: "z1-1", name: "VIP", capacity: 200, price: 3500, sold: 145 },
         { id: "z1-2", name: "Preferente", capacity: 500, price: 1800, sold: 380 },
@@ -122,6 +123,7 @@ function getSeedEvents(): Event[] {
       description: "Conferencia de tecnología e innovación con speakers internacionales.",
       image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&h=400&fit=crop",
       category: "Tecnología",
+      status: "en_revision",
       zones: [
         { id: "z2-1", name: "Platinum", capacity: 100, price: 5000, sold: 72 },
         { id: "z2-2", name: "Gold", capacity: 300, price: 2500, sold: 210 },
@@ -151,6 +153,7 @@ function getSeedEvents(): Event[] {
       description: "Torneo de futbol con equipos de toda la república.",
       image: "https://images.unsplash.com/photo-1459865264687-595d652de67e?w=600&h=400&fit=crop",
       category: "Deportes",
+      status: "borrador",
       zones: [
         { id: "z3-1", name: "Palco", capacity: 50, price: 8000, sold: 35 },
         { id: "z3-2", name: "Tribuna", capacity: 800, price: 1500, sold: 620 },
@@ -181,6 +184,7 @@ function getSeedEvents(): Event[] {
       description: "Experiencia culinaria con los mejores chefs del país y degustaciones.",
       image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop",
       category: "Gastronomía",
+      status: "publicado",
       zones: [
         { id: "z4-1", name: "Chef Experience", capacity: 80, price: 4500, sold: 55 },
         { id: "z4-2", name: "Premium", capacity: 400, price: 2000, sold: 290 },
@@ -209,6 +213,7 @@ function getSeedEvents(): Event[] {
       description: "Proyecciones de cine independiente nacional e internacional.",
       image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&h=400&fit=crop",
       category: "Cultura",
+      status: "borrador",
       zones: [
         { id: "z5-1", name: "Sala Principal", capacity: 300, price: 350, sold: 220 },
         { id: "z5-2", name: "Sala Alterna", capacity: 150, price: 250, sold: 100 },

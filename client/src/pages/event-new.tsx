@@ -53,6 +53,7 @@ export default function EventNewPage() {
       description: data.description,
       image: defaultImages[Math.floor(Math.random() * defaultImages.length)],
       category: data.category,
+      status: "borrador" as const,
       zones: [],
       activities: [],
       coupons: [],
