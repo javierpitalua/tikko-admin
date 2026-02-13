@@ -30,9 +30,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((email: string, password: string) => {
     const admins = getAdmins();
     let found = admins.find((a) => a.email === email);
-    if (found && found.password !== password) {
-      return { success: false, error: "Contraseña incorrecta" };
-    }
     if (!found) {
       const nameFromEmail = email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
       found = { id: generateId(), name: nameFromEmail, email, password };
