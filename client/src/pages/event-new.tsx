@@ -54,6 +54,7 @@ export default function EventNewPage() {
       zones: [],
       activities: [],
       coupons: [],
+      products: [],
       adminId: admin?.id || "admin",
     };
     events.push(newEvent);

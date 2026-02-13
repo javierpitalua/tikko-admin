@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { getEvents, saveEvents, generateId } from "@/lib/store";
-import type { Event, Zone, Activity, Coupon } from "@shared/schema";
+import type { Event, Zone, Activity, Coupon, Product } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, MapPin, Calendar, Edit2, Plus, Trash2,
   Ticket, Clock, Tag, Save, Users, Image as ImageIcon,
-  Upload, X, FileText, DollarSign, Settings, Building,
+  Upload, X, FileText, DollarSign, ShoppingBag, Building, Package,
 } from "lucide-react";
 
 const CATEGORIES = ["Música", "Tecnología", "Deportes", "Gastronomía", "Cultura", "Teatro", "Arte", "Otro"];
@@ -34,14 +34,17 @@ export default function EventDetailPage() {
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [zoneDialog, setZoneDialog] = useState(false);
   const [activityDialog, setActivityDialog] = useState(false);
   const [couponDialog, setCouponDialog] = useState(false);
+  const [productDialog, setProductDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
 
   const [zoneForm, setZoneForm] = useState({ name: "", capacity: "", price: "" });
   const [activityForm, setActivityForm] = useState({ name: "", time: "", description: "" });
   const [couponForm, setCouponForm] = useState({ code: "", discount: "", active: true });
+  const [productForm, setProductForm] = useState({ name: "", price: "", available: true });
 
   useEffect(() => {
     const events = getEvents();
@@ -262,6 +265,46 @@ export default function EventDetailPage() {
     toast({ title: "Cupón eliminado" });
   }
 
+  function openProductDialog(product?: Product) {
+    if (product) {
+      setEditingProduct(product);
+      setProductForm({ name: product.name, price: String(product.price), available: product.available });
+    } else {
+      setEditingProduct(null);
+      setProductForm({ name: "", price: "", available: true });
+    }
+    setProductDialog(true);
+  }
+
+  function saveProduct() {
+    if (!event || !productForm.name || !productForm.price) return;
+    const updated = { ...event };
+    if (editingProduct) {
+      updated.products = updated.products.map((p) =>
+        p.id === editingProduct.id
+          ? { ...p, name: productForm.name, price: Number(productForm.price), available: productForm.available }
+          : p
+      );
+    } else {
+      updated.products = [...(updated.products || []), {
+        id: generateId(),
+        name: productForm.name,
+        price: Number(productForm.price),
+        available: productForm.available,
+      }];
+    }
+    persistEvent(updated);
+    setProductDialog(false);
+    toast({ title: editingProduct ? "Producto actualizado" : "Producto agregado" });
+  }
+
+  function deleteProduct(productId: string) {
+    if (!event) return;
+    const updated = { ...event, products: event.products.filter((p) => p.id !== productId) };
+    persistEvent(updated);
+    toast({ title: "Producto eliminado" });
+  }
+
   const totalSold = event.zones.reduce((s, z) => s + z.sold, 0);
   const totalCap = event.zones.reduce((s, z) => s + z.capacity, 0);
   const totalRevenue = event.zones.reduce((s, z) => s + z.price * z.sold, 0);
@@ -356,7 +399,7 @@ export default function EventDetailPage() {
             Precios
           </TabsTrigger>
           <TabsTrigger value="extras" data-testid="tab-extras">
-            <Settings className="w-4 h-4 mr-1.5" />
+            <ShoppingBag className="w-4 h-4 mr-1.5" />
             Adicionales
           </TabsTrigger>
           <TabsTrigger value="coupons" data-testid="tab-coupons">
@@ -666,60 +709,60 @@ export default function EventDetailPage() {
           )}
         </TabsContent>
 
-        {/* ────────────── ADICIONALES ────────────── */}
+        {/* ────────────── ADICIONALES (PRODUCTOS) ────────────── */}
         <TabsContent value="extras" className="mt-4 space-y-4">
-          <h2 className="text-lg font-semibold">Información Adicional</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4 space-y-1">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Total Boletos</p>
-                <p className="text-2xl font-bold">{totalCap.toLocaleString()}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 space-y-1">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Vendidos</p>
-                <p className="text-2xl font-bold">{totalSold.toLocaleString()}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 space-y-1">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Disponibles</p>
-                <p className="text-2xl font-bold">{(totalCap - totalSold).toLocaleString()}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 space-y-1">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Ingreso Estimado</p>
-                <p className="text-2xl font-bold">${totalRevenue.toLocaleString("es-MX")}</p>
-              </CardContent>
-            </Card>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <h2 className="text-lg font-semibold">Productos y Artículos ({(event.products || []).length})</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">Camisas, gorras, souvenirs, estacionamiento y otros artículos conmemorativos</p>
+            </div>
+            <Button size="sm" onClick={() => openProductDialog()} data-testid="button-add-product">
+              <Plus className="w-4 h-4 mr-1" />
+              Agregar Producto
+            </Button>
           </div>
-          <Card>
-            <CardContent className="p-5 space-y-4">
-              <h3 className="font-semibold">Resumen de Zonas</h3>
-              {event.zones.length > 0 ? (
-                <div className="space-y-3">
-                  {event.zones.map((zone) => {
-                    const pct = zone.capacity > 0 ? Math.round((zone.sold / zone.capacity) * 100) : 0;
-                    return (
-                      <div key={zone.id} className="space-y-1.5">
-                        <div className="flex items-center justify-between gap-2 text-sm flex-wrap">
-                          <span className="font-medium">{zone.name}</span>
-                          <span className="text-muted-foreground">{zone.sold}/{zone.capacity} ({pct}%)</span>
-                        </div>
-                        <div className="h-2 rounded-md bg-muted overflow-hidden">
-                          <div className="h-full rounded-md bg-primary transition-all" style={{ width: `${pct}%` }} />
-                        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(event.products || []).map((product) => (
+              <Card key={product.id} data-testid={`card-product-${product.id}`}>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-md bg-accent shrink-0">
+                        <Package className="w-5 h-5 text-muted-foreground" />
                       </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No hay zonas configuradas</p>
-              )}
-            </CardContent>
-          </Card>
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{product.name}</p>
+                        <p className="text-lg font-bold">${product.price.toLocaleString("es-MX")}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="ghost" onClick={() => openProductDialog(product)} data-testid={`button-edit-product-${product.id}`}>
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => deleteProduct(product.id)} data-testid={`button-delete-product-${product.id}`}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Badge variant={product.available ? "default" : "secondary"}>
+                    {product.available ? "Disponible" : "No disponible"}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          {(event.products || []).length === 0 && (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <ShoppingBag className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">No hay productos registrados</p>
+                <Button size="sm" variant="outline" className="mt-3" onClick={() => openProductDialog()}>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Agregar primer producto
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* ────────────── CUPONES ────────────── */}
@@ -855,6 +898,36 @@ export default function EventDetailPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setCouponDialog(false)}>Cancelar</Button>
             <Button onClick={saveCoupon} data-testid="button-save-coupon">
+              <Save className="w-4 h-4 mr-1" />
+              Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={productDialog} onOpenChange={setProductDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? "Editar Producto" : "Nuevo Producto"}</DialogTitle>
+            <DialogDescription>Define el nombre, precio y disponibilidad del producto o artículo</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nombre del producto</Label>
+              <Input value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} placeholder="Ej: Camiseta oficial, Gorra, Estacionamiento" data-testid="input-product-name" />
+            </div>
+            <div className="space-y-2">
+              <Label>Precio ($)</Label>
+              <Input type="number" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} placeholder="Ej: 450" data-testid="input-product-price" />
+            </div>
+            <div className="flex items-center gap-3">
+              <Label>Disponible</Label>
+              <Switch checked={productForm.available} onCheckedChange={(val) => setProductForm({ ...productForm, available: val })} data-testid="switch-product-available" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProductDialog(false)}>Cancelar</Button>
+            <Button onClick={saveProduct} data-testid="button-save-product">
               <Save className="w-4 h-4 mr-1" />
               Guardar
             </Button>

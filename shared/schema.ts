@@ -57,6 +57,13 @@ export interface Coupon {
   active: boolean;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  available: boolean;
+}
+
 export interface Event {
   id: string;
   name: string;
@@ -68,6 +75,7 @@ export interface Event {
   zones: Zone[];
   activities: Activity[];
   coupons: Coupon[];
+  products: Product[];
   adminId: string;
 }
 

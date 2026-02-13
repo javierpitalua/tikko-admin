@@ -101,6 +101,12 @@ function getSeedEvents(): Event[] {
         { id: "c1-1", code: "ROCK20", discount: 20, active: true },
         { id: "c1-2", code: "VIP10", discount: 10, active: true },
       ],
+      products: [
+        { id: "p1-1", name: "Camiseta del Festival", price: 450, available: true },
+        { id: "p1-2", name: "Gorra Oficial", price: 280, available: true },
+        { id: "p1-3", name: "Poster Conmemorativo", price: 150, available: true },
+        { id: "p1-4", name: "Estacionamiento VIP", price: 350, available: true },
+      ],
       adminId: "admin-seed",
     },
     {
@@ -123,6 +129,11 @@ function getSeedEvents(): Event[] {
       ],
       coupons: [
         { id: "c2-1", code: "TECH30", discount: 30, active: true },
+      ],
+      products: [
+        { id: "p2-1", name: "Playera Tech Summit", price: 500, available: true },
+        { id: "p2-2", name: "Mochila Conferencia", price: 650, available: true },
+        { id: "p2-3", name: "Estacionamiento", price: 200, available: false },
       ],
       adminId: "admin-seed",
     },
@@ -147,6 +158,12 @@ function getSeedEvents(): Event[] {
         { id: "c3-1", code: "GOL15", discount: 15, active: true },
         { id: "c3-2", code: "FANS50", discount: 50, active: false },
       ],
+      products: [
+        { id: "p3-1", name: "Jersey Oficial", price: 900, available: true },
+        { id: "p3-2", name: "Bufanda del Torneo", price: 250, available: true },
+        { id: "p3-3", name: "Balón Firmado", price: 1200, available: false },
+        { id: "p3-4", name: "Estacionamiento", price: 150, available: true },
+      ],
       adminId: "admin-seed",
     },
     {
@@ -169,6 +186,11 @@ function getSeedEvents(): Event[] {
       coupons: [
         { id: "c4-1", code: "FOODIE25", discount: 25, active: true },
       ],
+      products: [
+        { id: "p4-1", name: "Delantal Chef", price: 380, available: true },
+        { id: "p4-2", name: "Kit de Especias", price: 550, available: true },
+        { id: "p4-3", name: "Estacionamiento", price: 100, available: true },
+      ],
       adminId: "admin-seed",
     },
     {
@@ -188,6 +210,10 @@ function getSeedEvents(): Event[] {
         { id: "a5-2", name: "Q&A con directores", time: "16:00", description: "Sesión con directores invitados" },
       ],
       coupons: [],
+      products: [
+        { id: "p5-1", name: "Tote Bag del Festival", price: 200, available: true },
+        { id: "p5-2", name: "Libro de Fotografías", price: 750, available: true },
+      ],
       adminId: "admin-seed",
     },
   ];
