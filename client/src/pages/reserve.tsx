@@ -304,47 +304,6 @@ export default function ReservePage() {
             </CardContent>
           </Card>
 
-          {lastReservation && (
-            <Card className="border-primary/30 bg-primary/5" data-testid="card-reservation-confirmation">
-              <CardContent className="p-5 space-y-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                  <h3 className="font-semibold text-lg">Reservación Creada</h3>
-                </div>
-                <div className="flex items-center gap-3 p-4 rounded-md bg-background border border-border">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Código de reserva</p>
-                    <p className="text-2xl font-mono font-bold tracking-wider mt-1" data-testid="text-reservation-code">{lastReservation.code}</p>
-                  </div>
-                  <Button size="icon" variant="outline" onClick={() => copyCode(lastReservation.code)} data-testid="button-copy-code">
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Evento</p>
-                    <p className="font-medium">{events.find((e) => e.id === lastReservation.eventId)?.name}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Boletos</p>
-                    <p className="font-medium">{lastReservation.quantity}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Estado</p>
-                    <Badge variant="outline">Apartado</Badge>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Expira en</p>
-                    <p className="font-medium flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5" />
-                      48 horas
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">Tienes 48 horas para confirmar el pago antes de que la reservación expire automáticamente.</p>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         <div className="space-y-4">
@@ -402,6 +361,48 @@ export default function ReservePage() {
               </div>
             </CardContent>
           </Card>
+
+          {lastReservation && (
+            <Card className="border-primary/30 bg-primary/5" data-testid="card-reservation-confirmation">
+              <CardContent className="p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                  <h3 className="font-semibold text-lg">Reservación Creada</h3>
+                </div>
+                <div className="flex items-center gap-3 p-4 rounded-md bg-background border border-border">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Código de reserva</p>
+                    <p className="text-2xl font-mono font-bold tracking-wider mt-1" data-testid="text-reservation-code">{lastReservation.code}</p>
+                  </div>
+                  <Button size="icon" variant="outline" onClick={() => copyCode(lastReservation.code)} data-testid="button-copy-code">
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Evento</p>
+                    <p className="font-medium">{events.find((e) => e.id === lastReservation.eventId)?.name}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Boletos</p>
+                    <p className="font-medium">{lastReservation.quantity}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Estado</p>
+                    <Badge variant="outline">Apartado</Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Expira en</p>
+                    <p className="font-medium flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" />
+                      48 horas
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">Tienes 48 horas para confirmar el pago antes de que la reservación expire automáticamente.</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
