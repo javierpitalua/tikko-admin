@@ -170,7 +170,7 @@ export default function VerifyPage() {
           </CardContent>
         </Card>
 
-        <p className="text-xs text-muted-foreground/60 text-center mt-6">EventTicket Admin v1.0</p>
+        <p className="text-xs text-muted-foreground/60 text-center mt-6">Tikko Admin v1.0</p>
       </div>
     </div>
   );

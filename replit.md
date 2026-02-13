@@ -1,4 +1,4 @@
-# EventTicket Admin - Panel de Gestión de Eventos
+# Tikko Admin - Panel de Gestión de Eventos
 
 ## Overview
 A frontend-only event management dashboard (boletera) built with React, TypeScript, and Shadcn UI components. Uses localStorage for data persistence with seed data. No database required.

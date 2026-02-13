@@ -41,7 +41,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-chart-3 mb-5 shadow-xl auth-logo-glow">
             <Ticket className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">EventTicket Admin</h1>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Tikko Admin</h1>
           <p className="text-muted-foreground mt-1.5 text-sm">Plataforma de gestión de eventos</p>
         </div>
 
@@ -126,7 +126,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-xs text-muted-foreground/60 text-center mt-6">EventTicket Admin v1.0</p>
+        <p className="text-xs text-muted-foreground/60 text-center mt-6">Tikko Admin v1.0</p>
       </div>
     </div>
   );

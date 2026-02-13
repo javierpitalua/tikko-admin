@@ -43,7 +43,7 @@ export function AppSidebar() {
             <Ticket className="w-5 h-5 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-sm tracking-tight truncate">EventTicket</p>
+            <p className="font-bold text-sm tracking-tight truncate">Tikko</p>
             <p className="text-[11px] text-muted-foreground truncate">Panel de Administración</p>
           </div>
         </div>
