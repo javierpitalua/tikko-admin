@@ -384,7 +384,7 @@ export default function EventDetailPage() {
         <TabsList className="w-full justify-start flex-wrap gap-1">
           <TabsTrigger value="basic" data-testid="tab-basic">
             <FileText className="w-4 h-4 mr-1.5" />
-            Básico
+            Evento
           </TabsTrigger>
           <TabsTrigger value="activities" data-testid="tab-activities">
             <Clock className="w-4 h-4 mr-1.5" />
