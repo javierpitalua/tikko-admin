@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Ticket, ShieldCheck, AlertCircle, Mail, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Ticket, ShieldCheck, AlertCircle, Mail, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function VerifyPage() {
@@ -91,16 +91,6 @@ export default function VerifyPage() {
                 <div className="text-sm min-w-0">
                   <p className="text-muted-foreground text-xs">Código enviado a:</p>
                   <p className="font-medium text-foreground truncate" data-testid="text-masked-email">{maskedEmail}</p>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-chart-3/5 border border-primary/10">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Código enviado por correo</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Revisa tu bandeja de entrada en {maskedEmail}</p>
-                  </div>
                 </div>
               </div>
 
