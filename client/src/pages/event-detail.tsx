@@ -798,7 +798,7 @@ export default function EventDetailPage() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold truncate">{product.name}</p>
-                        <p className="text-lg font-bold">${product.price.toLocaleString("es-MX")}</p>
+                        <p className="text-lg font-bold">{product.price === 0 ? "Gratuito" : `$${product.price.toLocaleString("es-MX")}`}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -988,9 +988,18 @@ export default function EventDetailPage() {
               <Label>Nombre del producto</Label>
               <Input value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} placeholder="Ej: Camiseta oficial, Gorra, Estacionamiento" data-testid="input-product-name" />
             </div>
+
+            <div className="flex items-center gap-3">
+              <Label>Gratuito</Label>
+              <Switch
+                checked={productForm.price === "0"}
+                onCheckedChange={(val) => setProductForm({ ...productForm, price: val ? "0" : "" })}
+                data-testid="switch-product-free"
+              />
+            </div>
             <div className="space-y-2">
               <Label>Precio ($)</Label>
-              <Input type="number" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} placeholder="Ej: 450" data-testid="input-product-price" />
+              <Input type="number" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} placeholder="Ej: 450" disabled={productForm.price === "0"} data-testid="input-product-price" />
             </div>
             <div className="flex items-center gap-3">
               <Label>Disponible</Label>
@@ -1108,7 +1117,7 @@ export default function EventDetailPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm">{product.name}</p>
                       </div>
-                      <p className="font-bold text-sm">${product.price.toLocaleString("es-MX")}</p>
+                      <p className="font-bold text-sm">{product.price === 0 ? "Gratuito" : `$${product.price.toLocaleString("es-MX")}`}</p>
                     </div>
                   ))}
                 </div>
