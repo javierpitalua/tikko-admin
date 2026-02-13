@@ -240,4 +240,82 @@
   .dark .auth-gradient {
     background: linear-gradient(135deg, hsl(255 85% 68% / 0.12) 0%, hsl(292 84% 68% / 0.08) 50%, hsl(255 85% 68% / 0.04) 100%);
   }
+
+  .auth-gradient-modern {
+    background: 
+      radial-gradient(ellipse at 20% 50%, hsl(252 85% 60% / 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, hsl(292 84% 61% / 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, hsl(252 85% 60% / 0.04) 0%, transparent 50%),
+      hsl(var(--background));
+  }
+
+  .dark .auth-gradient-modern {
+    background: 
+      radial-gradient(ellipse at 20% 50%, hsl(255 85% 68% / 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, hsl(292 84% 68% / 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, hsl(255 85% 68% / 0.05) 0%, transparent 50%),
+      hsl(var(--background));
+  }
+
+  .auth-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .auth-orb-1 {
+    width: 300px;
+    height: 300px;
+    top: -80px;
+    right: -60px;
+    background: hsl(252 85% 60% / 0.12);
+  }
+
+  .auth-orb-2 {
+    width: 250px;
+    height: 250px;
+    bottom: -60px;
+    left: -80px;
+    background: hsl(292 84% 61% / 0.10);
+  }
+
+  .auth-orb-3 {
+    width: 200px;
+    height: 200px;
+    top: 40%;
+    left: 60%;
+    background: hsl(252 85% 60% / 0.06);
+  }
+
+  .dark .auth-orb-1 {
+    background: hsl(255 85% 68% / 0.15);
+  }
+
+  .dark .auth-orb-2 {
+    background: hsl(292 84% 68% / 0.12);
+  }
+
+  .dark .auth-orb-3 {
+    background: hsl(255 85% 68% / 0.08);
+  }
+
+  .auth-card {
+    background: hsl(var(--card) / 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .dark .auth-card {
+    background: hsl(var(--card) / 0.75);
+  }
+
+  .auth-logo-glow {
+    box-shadow: 0 8px 32px hsl(252 85% 60% / 0.25);
+  }
+
+  .dark .auth-logo-glow {
+    box-shadow: 0 8px 32px hsl(255 85% 68% / 0.3);
+  }
 }
