@@ -29,9 +29,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback((email: string, password: string) => {
     const admins = getAdmins();
-    const found = admins.find((a) => a.email === email && a.password === password);
+    let found = admins.find((a) => a.email === email);
+    if (found && found.password !== password) {
+      return { success: false, error: "Contraseña incorrecta" };
+    }
     if (!found) {
-      return { success: false, error: "Credenciales inválidas" };
+      const nameFromEmail = email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      found = { id: generateId(), name: nameFromEmail, email, password };
+      saveAdmin(found);
     }
     const token = String(Math.floor(100000 + Math.random() * 900000));
     setPendingToken(token);
