@@ -451,25 +451,29 @@ export default function ReservePage() {
                           </span>
                         </td>
                         <td className="py-3 px-3">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="gap-1 px-2" data-testid={`button-status-${r.id}`}>
-                                <Badge variant={cfg.variant}>{cfg.label}</Badge>
-                                <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                              {(Object.entries(STATUS_CONFIG) as [ReservationStatus, typeof cfg][]).map(([key, val]) => (
-                                <DropdownMenuItem
-                                  key={key}
-                                  onClick={() => updateReservationStatus(r.id, key)}
-                                  data-testid={`menu-status-${key}-${r.id}`}
-                                >
-                                  <Badge variant={val.variant} className="mr-2">{val.label}</Badge>
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          {r.status === "apartado" ? (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="gap-1 px-2" data-testid={`button-status-${r.id}`}>
+                                  <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start">
+                                {(Object.entries(STATUS_CONFIG) as [ReservationStatus, typeof cfg][]).map(([key, val]) => (
+                                  <DropdownMenuItem
+                                    key={key}
+                                    onClick={() => updateReservationStatus(r.id, key)}
+                                    data-testid={`menu-status-${key}-${r.id}`}
+                                  >
+                                    <Badge variant={val.variant} className="mr-2">{val.label}</Badge>
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          ) : (
+                            <Badge variant={cfg.variant} data-testid={`badge-status-${r.id}`}>{cfg.label}</Badge>
+                          )}
                         </td>
                       </tr>
                     );
