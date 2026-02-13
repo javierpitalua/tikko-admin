@@ -18,7 +18,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   Ticket, User, Mail, Phone, Calendar, MapPin, AlertCircle,
-  CheckCircle2, Copy, Clock, ChevronDown, CreditCard, XCircle,
+  CheckCircle2, Copy, Clock, ChevronDown,
 } from "lucide-react";
 
 const STATUS_CONFIG: Record<ReservationStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -423,7 +423,6 @@ export default function ReservePage() {
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Fecha</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Tiempo restante</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Estado</th>
-                    <th className="text-right py-3 px-3 font-medium text-muted-foreground">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -471,35 +470,6 @@ export default function ReservePage() {
                               ))}
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="flex items-center justify-end gap-1">
-                            {r.status === "apartado" && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => updateReservationStatus(r.id, "vendido")}
-                                  data-testid={`button-confirm-${r.id}`}
-                                >
-                                  <CreditCard className="w-3.5 h-3.5 mr-1" />
-                                  Confirmar
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => updateReservationStatus(r.id, "cancelado")}
-                                  data-testid={`button-cancel-${r.id}`}
-                                >
-                                  <XCircle className="w-3.5 h-3.5 mr-1" />
-                                  Cancelar
-                                </Button>
-                              </>
-                            )}
-                            {r.status !== "apartado" && (
-                              <span className="text-xs text-muted-foreground">-</span>
-                            )}
-                          </div>
                         </td>
                       </tr>
                     );
