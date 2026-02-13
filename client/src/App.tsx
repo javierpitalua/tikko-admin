@@ -12,6 +12,7 @@ import VerifyPage from "@/pages/verify";
 import DashboardPage from "@/pages/dashboard";
 import EventsPage from "@/pages/events";
 import EventDetailPage from "@/pages/event-detail";
+import EventNewPage from "@/pages/event-new";
 import ReservePage from "@/pages/reserve";
 import NotFound from "@/pages/not-found";
 
@@ -39,6 +40,7 @@ function ProtectedLayout() {
             <Switch>
               <Route path="/dashboard" component={DashboardPage} />
               <Route path="/events" component={EventsPage} />
+              <Route path="/events/new" component={EventNewPage} />
               <Route path="/events/:id" component={EventDetailPage} />
               <Route path="/reserve" component={ReservePage} />
               <Route>
