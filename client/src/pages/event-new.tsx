@@ -5,14 +5,15 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getEvents, saveEvents, generateId } from "@/lib/store";
 import { useAuth } from "@/lib/auth-context";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Upload, X, ImageIcon } from "lucide-react";
+import { ArrowLeft, Save, Upload, X, ImageIcon, Calendar, MapPin, Ticket, Clock, FileText } from "lucide-react";
 
 const newEventSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
@@ -32,6 +33,8 @@ const defaultImages = [
   "https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=600&h=400&fit=crop",
 ];
 
+const placeholderBanner = "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&h=400&fit=crop";
+
 export default function EventNewPage() {
   const [, navigate] = useLocation();
   const { admin } = useAuth();
@@ -43,6 +46,8 @@ export default function EventNewPage() {
     resolver: zodResolver(newEventSchema),
     defaultValues: { name: "", startDate: "", endDate: "", location: "", description: "", category: "" },
   });
+
+  const watchedValues = form.watch();
 
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -83,8 +88,16 @@ export default function EventNewPage() {
     navigate(`/events/${newEvent.id}`);
   }
 
+  function formatDate(dateStr: string) {
+    if (!dateStr) return "";
+    return new Date(dateStr + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  const previewImage = bannerImage || placeholderBanner;
+  const hasAnyData = watchedValues.name || watchedValues.startDate || watchedValues.location || watchedValues.category || watchedValues.description;
+
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
       <Button variant="ghost" onClick={() => navigate("/events")} className="rounded-xl" data-testid="button-back-events">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Volver a eventos
@@ -93,128 +106,209 @@ export default function EventNewPage() {
       <div>
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70 mb-1">Nuevo</p>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Crear Evento</h1>
-        <p className="text-sm text-muted-foreground mt-1">Completa los datos del evento. Después podrás agregar zonas, actividades y cupones.</p>
+        <p className="text-sm text-muted-foreground mt-1">Completa los datos y ve la vista previa en tiempo real.</p>
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Imagen de banner</label>
-                {bannerImage ? (
-                  <div className="relative rounded-xl overflow-hidden border border-border">
-                    <img src={bannerImage} alt="Banner preview" className="w-full h-48 object-cover" data-testid="img-banner-preview" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="absolute top-3 right-3 bg-black/50 text-white rounded-lg"
-                      onClick={() => setBannerImage("")}
-                      data-testid="button-remove-banner"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="absolute bottom-3 left-3 bg-black/40 border-white/30 text-white backdrop-blur-sm rounded-xl"
-                      onClick={() => fileInputRef.current?.click()}
-                      data-testid="button-change-banner"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Cambiar imagen
-                    </Button>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-col items-center justify-center w-full h-48 rounded-xl border-2 border-dashed border-border/60 bg-accent/30 cursor-pointer hover-elevate"
-                    data-testid="dropzone-banner"
-                  >
-                    <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-accent mb-3">
-                      <ImageIcon className="w-5 h-5 text-muted-foreground" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <Card>
+          <CardContent className="p-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Imagen de banner</label>
+                  {bannerImage ? (
+                    <div className="relative rounded-xl overflow-hidden border border-border">
+                      <img src={bannerImage} alt="Banner preview" className="w-full h-40 object-cover" data-testid="img-banner-preview" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="absolute top-2 right-2 bg-black/50 text-white rounded-lg"
+                        onClick={() => setBannerImage("")}
+                        data-testid="button-remove-banner"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="absolute bottom-2 left-2 bg-black/40 border-white/30 text-white backdrop-blur-sm rounded-xl"
+                        onClick={() => fileInputRef.current?.click()}
+                        data-testid="button-change-banner"
+                      >
+                        <Upload className="w-3.5 h-3.5 mr-1.5" />
+                        Cambiar
+                      </Button>
                     </div>
-                    <p className="text-sm font-medium text-foreground">Sube una imagen de banner</p>
-                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG o WebP recomendado</p>
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                  data-testid="input-file-banner"
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex flex-col items-center justify-center w-full h-36 rounded-xl border-2 border-dashed border-border/60 bg-accent/30 cursor-pointer hover-elevate"
+                      data-testid="dropzone-banner"
+                    >
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent mb-2">
+                        <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <p className="text-sm font-medium text-foreground">Sube una imagen de banner</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG o WebP</p>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    data-testid="input-file-banner"
+                  />
+                </div>
+
+                <FormField control={form.control} name="name" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nombre del evento</FormLabel>
+                    <FormControl><Input {...field} placeholder="Ej: Festival de Verano 2026" className="h-11 rounded-xl" data-testid="input-event-name" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="startDate" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fecha de inicio</FormLabel>
+                      <FormControl><Input {...field} type="date" className="h-11 rounded-xl" data-testid="input-event-start-date" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="endDate" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fecha de fin</FormLabel>
+                      <FormControl><Input {...field} type="date" className="h-11 rounded-xl" data-testid="input-event-end-date" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="location" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Ubicación</FormLabel>
+                      <FormControl><Input {...field} placeholder="Ej: Arena CDMX" className="h-11 rounded-xl" data-testid="input-event-location" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="category" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Categoría</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="h-11 rounded-xl" data-testid="select-event-category"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categories.map((cat) => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+
+                <FormField control={form.control} name="description" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Descripción</FormLabel>
+                    <FormControl><Textarea {...field} placeholder="Describe el evento..." className="resize-none rounded-xl" rows={3} data-testid="input-event-description" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <Button type="submit" className="w-full rounded-xl" data-testid="button-create-event">
+                  <Save className="w-4 h-4 mr-2" />
+                  Crear Evento
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        <div className="lg:sticky lg:top-24 space-y-4">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">Vista previa</p>
+          <Card className="overflow-visible">
+            <div className="rounded-t-xl overflow-hidden relative">
+              <div className="aspect-[16/9]">
+                <img
+                  src={previewImage}
+                  alt="Vista previa del banner"
+                  className="w-full h-full object-cover"
+                  data-testid="img-preview-card"
                 />
               </div>
-
-              <FormField control={form.control} name="name" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nombre del evento</FormLabel>
-                  <FormControl><Input {...field} placeholder="Ej: Festival de Verano 2026" className="h-11 rounded-xl" data-testid="input-event-name" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="startDate" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fecha de inicio</FormLabel>
-                    <FormControl><Input {...field} type="date" className="h-11 rounded-xl" data-testid="input-event-start-date" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="endDate" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fecha de fin</FormLabel>
-                    <FormControl><Input {...field} type="date" className="h-11 rounded-xl" data-testid="input-event-end-date" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                {watchedValues.category && (
+                  <Badge variant="secondary" className="mb-2 bg-white/15 text-white border-0 backdrop-blur-sm text-[11px]">
+                    {watchedValues.category}
+                  </Badge>
+                )}
+                <h2 className="text-lg font-bold text-white leading-snug" data-testid="text-preview-name">
+                  {watchedValues.name || "Nombre del evento"}
+                </h2>
+              </div>
+            </div>
+            <CardContent className="p-5 space-y-4">
+              <div className="space-y-2.5">
+                {(watchedValues.startDate || watchedValues.endDate) && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                    <span>
+                      {watchedValues.startDate ? formatDate(watchedValues.startDate) : "Inicio"}
+                      {" - "}
+                      {watchedValues.endDate ? formatDate(watchedValues.endDate) : "Fin"}
+                    </span>
+                  </div>
+                )}
+                {watchedValues.location && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                    <span>{watchedValues.location}</span>
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="location" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Ubicación</FormLabel>
-                    <FormControl><Input {...field} placeholder="Ej: Arena Ciudad de México" className="h-11 rounded-xl" data-testid="input-event-location" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="category" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Categoría</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="h-11 rounded-xl" data-testid="select-event-category"><SelectValue placeholder="Selecciona categoría" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((cat) => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+              {watchedValues.description && (
+                <div className="pt-3 border-t border-border/50">
+                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{watchedValues.description}</p>
+                </div>
+              )}
+
+              {!hasAnyData && (
+                <div className="text-center py-4">
+                  <p className="text-xs text-muted-foreground">Los datos del evento aparecerán aquí mientras llenas el formulario</p>
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-border/50 space-y-2">
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Ticket className="w-3.5 h-3.5" />
+                    <span>Boletos</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Sin zonas configuradas</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Actividades</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">0</span>
+                </div>
               </div>
 
-              <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Descripción</FormLabel>
-                  <FormControl><Textarea {...field} placeholder="Describe el evento..." className="resize-none rounded-xl" rows={4} data-testid="input-event-description" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
-              <Button type="submit" className="w-full rounded-xl" data-testid="button-create-event">
-                <Save className="w-4 h-4 mr-2" />
-                Crear Evento
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+              <Badge variant="secondary" className="text-[11px]">Borrador</Badge>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
