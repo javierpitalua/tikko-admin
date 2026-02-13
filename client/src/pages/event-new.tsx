@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Calendar, MapPin, FolderOpen, FileText } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 
 const newEventSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
@@ -67,7 +67,7 @@ export default function EventNewPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
       <Button variant="ghost" onClick={() => navigate("/events")} data-testid="button-back-events">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Volver a eventos
@@ -75,21 +75,16 @@ export default function EventNewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-semibold">Crear Nuevo Evento</CardTitle>
+          <CardTitle>Crear Nuevo Evento</CardTitle>
           <CardDescription>Completa los datos del evento. Después podrás agregar zonas, actividades y cupones.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nombre del evento</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input {...field} placeholder="Ej: Festival de Verano 2026" className="pl-10" data-testid="input-event-name" />
-                    </div>
-                  </FormControl>
+                  <FormControl><Input {...field} placeholder="Ej: Festival de Verano 2026" data-testid="input-event-name" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -97,24 +92,14 @@ export default function EventNewPage() {
                 <FormField control={form.control} name="startDate" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Fecha de inicio</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input {...field} type="date" className="pl-10" data-testid="input-event-start-date" />
-                      </div>
-                    </FormControl>
+                    <FormControl><Input {...field} type="date" data-testid="input-event-start-date" /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="endDate" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Fecha de fin</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input {...field} type="date" className="pl-10" data-testid="input-event-end-date" />
-                      </div>
-                    </FormControl>
+                    <FormControl><Input {...field} type="date" data-testid="input-event-end-date" /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -122,12 +107,7 @@ export default function EventNewPage() {
               <FormField control={form.control} name="location" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Ubicación</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input {...field} placeholder="Ej: Arena Ciudad de México" className="pl-10" data-testid="input-event-location" />
-                    </div>
-                  </FormControl>
+                  <FormControl><Input {...field} placeholder="Ej: Arena Ciudad de México" data-testid="input-event-location" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

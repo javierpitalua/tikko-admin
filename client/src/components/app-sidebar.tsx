@@ -11,7 +11,6 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
-  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -38,9 +37,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-5 pb-4">
+      <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-chart-3 shrink-0 shadow-sm">
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-chart-3 shrink-0">
             <Ticket className="w-5 h-5 text-white" />
           </div>
           <div className="min-w-0">
@@ -50,11 +49,9 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarSeparator />
-
-      <SidebarContent className="px-2 pt-2">
+      <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Navegación</SidebarGroupLabel>
+          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => {
@@ -64,7 +61,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       onClick={() => navigate(item.url)}
                       data-active={isActive}
-                      className={`rounded-xl transition-all duration-200 ${isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : ""}`}
+                      className={isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}
                       data-testid={`nav-${item.title.toLowerCase().replace(/\s/g, "-")}`}
                     >
                       <item.icon className="w-4 h-4" />
@@ -78,12 +75,10 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarSeparator />
-
       <SidebarFooter className="p-4">
         <div className="flex items-center gap-3">
           <Avatar className="w-9 h-9 shrink-0">
-            <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold rounded-xl">{initials}</AvatarFallback>
+            <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{admin?.name || "Admin"}</p>

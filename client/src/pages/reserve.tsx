@@ -146,17 +146,17 @@ export default function ReservePage() {
   const subtotal = selectedZone ? selectedZone.price * (form.watch("quantity") || 0) : 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight" data-testid="text-reserve-title">Apartar Boletos</h1>
-        <p className="text-muted-foreground mt-1.5 text-sm">Reserva boletos para los eventos disponibles</p>
+        <p className="text-muted-foreground mt-1">Reserva boletos para los eventos disponibles</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base font-semibold">Datos de Reservación</CardTitle>
+              <CardTitle>Datos de Reservación</CardTitle>
               <CardDescription>Completa todos los campos para apartar tus boletos</CardDescription>
             </CardHeader>
             <CardContent>
@@ -171,7 +171,7 @@ export default function ReservePage() {
                           <FormLabel>Nombre completo</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <Input {...field} placeholder="Tu nombre completo" className="pl-10" data-testid="input-reserve-name" />
                             </div>
                           </FormControl>
@@ -187,7 +187,7 @@ export default function ReservePage() {
                           <FormLabel>Correo electrónico</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <Input {...field} type="email" placeholder="tu@correo.com" className="pl-10" data-testid="input-reserve-email" />
                             </div>
                           </FormControl>
@@ -205,7 +205,7 @@ export default function ReservePage() {
                         <FormLabel>Número celular (10 dígitos)</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input {...field} placeholder="5512345678" className="pl-10" maxLength={10} data-testid="input-reserve-phone" />
                           </div>
                         </FormControl>
@@ -278,7 +278,7 @@ export default function ReservePage() {
                         <FormLabel>Cantidad de boletos (máx. 8 por evento)</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Ticket className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
                               type="number"
                               min={1}
@@ -306,26 +306,26 @@ export default function ReservePage() {
 
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           {selectedEvent && (
             <Card data-testid="card-event-preview">
-              <div className="aspect-video overflow-hidden rounded-t-xl">
+              <div className="aspect-video overflow-hidden rounded-t-md">
                 <img src={selectedEvent.image} alt={selectedEvent.name} className="w-full h-full object-cover" />
               </div>
-              <CardContent className="p-5 space-y-3.5">
+              <CardContent className="p-4 space-y-3">
                 <h3 className="font-semibold">{selectedEvent.name}</h3>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2.5">
+                <div className="space-y-1.5 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 shrink-0" />
                     {new Date(selectedEvent.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })} - {new Date(selectedEvent.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
                   </div>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2">
                     <MapPin className="w-3.5 h-3.5 shrink-0" />
                     {selectedEvent.location}
                   </div>
                 </div>
                 {selectedZone && (
-                  <div className="p-4 rounded-xl bg-accent/50 space-y-2.5">
+                  <div className="p-3 rounded-md bg-accent/50 space-y-2">
                     <div className="flex items-center justify-between gap-3 flex-wrap text-sm">
                       <span className="text-muted-foreground">Zona:</span>
                       <span className="font-medium">{selectedZone.name}</span>
@@ -338,7 +338,7 @@ export default function ReservePage() {
                       <span className="text-muted-foreground">Cantidad:</span>
                       <span className="font-medium">{form.watch("quantity") || 0}</span>
                     </div>
-                    <div className="border-t border-border pt-2.5 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="border-t border-border pt-2 flex items-center justify-between gap-3 flex-wrap">
                       <span className="font-medium">Subtotal:</span>
                       <span className="text-lg font-bold text-primary">${subtotal.toLocaleString("es-MX")}</span>
                     </div>
@@ -349,12 +349,10 @@ export default function ReservePage() {
           )}
 
           <Card>
-            <CardContent className="p-5">
-              <div className="flex items-start gap-3">
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-accent shrink-0 mt-0.5">
-                  <AlertCircle className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <div className="text-sm text-muted-foreground space-y-1.5">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="text-sm text-muted-foreground space-y-1">
                   <p className="font-medium text-foreground">Información importante</p>
                   <p>Máximo 8 boletos por usuario por evento.</p>
                   <p>Los boletos apartados se reservan por 48 horas.</p>
@@ -367,13 +365,13 @@ export default function ReservePage() {
           {lastReservation && (
             <Card className="border-primary/30 bg-primary/5" data-testid="card-reservation-confirmation">
               <CardContent className="p-5 space-y-4">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
                   <h3 className="font-semibold text-lg">Reservación Creada</h3>
                 </div>
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-background border border-border">
+                <div className="flex items-center gap-3 p-4 rounded-md bg-background border border-border">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Código de reserva</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Código de reserva</p>
                     <p className="text-2xl font-mono font-bold tracking-wider mt-1" data-testid="text-reservation-code">{lastReservation.code}</p>
                   </div>
                   <Button size="icon" variant="outline" onClick={() => copyCode(lastReservation.code)} data-testid="button-copy-code">
@@ -411,20 +409,20 @@ export default function ReservePage() {
       {reservations.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Reservaciones Realizadas ({reservations.length})</CardTitle>
+            <CardTitle className="text-base">Reservaciones Realizadas ({reservations.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3.5 px-3 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Código</th>
-                    <th className="text-left py-3.5 px-3 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Nombre</th>
-                    <th className="text-left py-3.5 px-3 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Evento</th>
-                    <th className="text-center py-3.5 px-3 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Cantidad</th>
-                    <th className="text-left py-3.5 px-3 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Fecha</th>
-                    <th className="text-left py-3.5 px-3 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Tiempo</th>
-                    <th className="text-left py-3.5 px-3 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Estado</th>
+                  <tr className="border-b border-border bg-accent/30">
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Código</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Nombre</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Evento</th>
+                    <th className="text-center py-3 px-3 font-medium text-muted-foreground">Cantidad</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Fecha</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Tiempo restante</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -433,26 +431,26 @@ export default function ReservePage() {
                     const remaining = getTimeRemaining(r.createdAt, r.status);
                     const cfg = STATUS_CONFIG[r.status];
                     return (
-                      <tr key={r.id} className="border-b border-border last:border-0 transition-colors duration-150" data-testid={`row-reservation-${r.id}`}>
-                        <td className="py-3.5 px-3">
+                      <tr key={r.id} className="border-b border-border last:border-0" data-testid={`row-reservation-${r.id}`}>
+                        <td className="py-3 px-3">
                           <code className="font-mono text-xs font-semibold" data-testid={`text-code-${r.id}`}>{r.code}</code>
                         </td>
-                        <td className="py-3.5 px-3">
+                        <td className="py-3 px-3">
                           <div>
                             <p className="font-medium">{r.name}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{r.email}</p>
+                            <p className="text-xs text-muted-foreground">{r.email}</p>
                           </div>
                         </td>
-                        <td className="py-3.5 px-3">{evt?.name || "N/A"}</td>
-                        <td className="py-3.5 px-3 text-center tabular-nums">{r.quantity}</td>
-                        <td className="py-3.5 px-3 text-muted-foreground tabular-nums">{r.date}</td>
-                        <td className="py-3.5 px-3">
+                        <td className="py-3 px-3">{evt?.name || "N/A"}</td>
+                        <td className="py-3 px-3 text-center">{r.quantity}</td>
+                        <td className="py-3 px-3 text-muted-foreground">{r.date}</td>
+                        <td className="py-3 px-3">
                           <span className={`flex items-center gap-1.5 text-xs font-medium ${remaining.expired ? "text-muted-foreground" : "text-primary"}`}>
                             <Clock className="w-3.5 h-3.5" />
                             {remaining.text}
                           </span>
                         </td>
-                        <td className="py-3.5 px-3">
+                        <td className="py-3 px-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="gap-1 px-2" data-testid={`button-status-${r.id}`}>
