@@ -45,7 +45,7 @@ export default function EventDetailPage() {
   const [activeTab, setActiveTab] = useState("basic");
 
   const [zoneForm, setZoneForm] = useState({ name: "", capacity: "", price: "" });
-  const [activityForm, setActivityForm] = useState({ name: "", date: "", startTime: "", endTime: "", description: "" });
+  const [activityForm, setActivityForm] = useState({ name: "", startDate: "", endDate: "", startTime: "", endTime: "", description: "" });
   const [couponForm, setCouponForm] = useState({ code: "", discount: "", active: true });
   const [productForm, setProductForm] = useState({ name: "", price: "", available: true });
   const [confirmDelete, setConfirmDelete] = useState<{ type: string; id: string; name: string } | null>(null);
@@ -236,28 +236,29 @@ export default function EventDetailPage() {
   function openActivityDialog(activity?: Activity) {
     if (activity) {
       setEditingActivity(activity);
-      setActivityForm({ name: activity.name, date: activity.date || "", startTime: activity.startTime, endTime: activity.endTime, description: activity.description });
+      setActivityForm({ name: activity.name, startDate: activity.startDate || "", endDate: activity.endDate || "", startTime: activity.startTime, endTime: activity.endTime, description: activity.description });
     } else {
       setEditingActivity(null);
-      setActivityForm({ name: "", date: "", startTime: "", endTime: "", description: "" });
+      setActivityForm({ name: "", startDate: "", endDate: "", startTime: "", endTime: "", description: "" });
     }
     setActivityDialog(true);
   }
 
   function saveActivity() {
-    if (!event || !activityForm.name || !activityForm.date || !activityForm.startTime || !activityForm.endTime) return;
+    if (!event || !activityForm.name || !activityForm.startDate || !activityForm.startTime || !activityForm.endTime) return;
     const updated = { ...event };
     if (editingActivity) {
       updated.activities = updated.activities.map((a) =>
         a.id === editingActivity.id
-          ? { ...a, name: activityForm.name, date: activityForm.date, startTime: activityForm.startTime, endTime: activityForm.endTime, description: activityForm.description }
+          ? { ...a, name: activityForm.name, startDate: activityForm.startDate, endDate: activityForm.endDate || activityForm.startDate, startTime: activityForm.startTime, endTime: activityForm.endTime, description: activityForm.description }
           : a
       );
     } else {
       updated.activities = [...updated.activities, {
         id: generateId(),
         name: activityForm.name,
-        date: activityForm.date,
+        startDate: activityForm.startDate,
+        endDate: activityForm.endDate || activityForm.startDate,
         startTime: activityForm.startTime,
         endTime: activityForm.endTime,
         description: activityForm.description,
@@ -658,7 +659,7 @@ export default function EventDetailPage() {
                       <p className="font-medium">{act.name}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <Badge variant="secondary" className="text-[11px] font-normal">
-                          {act.date ? `${new Date(act.date + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ` : ""}{act.startTime} - {act.endTime} hrs
+                          {act.startDate ? `${new Date(act.startDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ${act.startTime} hrs` : act.startTime}{" - "}{act.endDate && act.endDate !== act.startDate ? `${new Date(act.endDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ` : ""}{act.endTime} hrs
                         </Badge>
                         <span className="text-xs text-muted-foreground truncate">{act.description}</span>
                       </div>
@@ -979,9 +980,15 @@ export default function EventDetailPage() {
               <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nombre</Label>
               <Input value={activityForm.name} onChange={(e) => setActivityForm({ ...activityForm, name: e.target.value })} placeholder="Ej: Meet & Greet" className="h-11 rounded-xl" data-testid="input-activity-name" />
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fecha</Label>
-              <Input type="date" value={activityForm.date} onChange={(e) => setActivityForm({ ...activityForm, date: e.target.value })} className="h-11 rounded-xl" data-testid="input-activity-date" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fecha de inicio</Label>
+                <Input type="date" value={activityForm.startDate} onChange={(e) => setActivityForm({ ...activityForm, startDate: e.target.value })} className="h-11 rounded-xl" data-testid="input-activity-start-date" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fecha de fin</Label>
+                <Input type="date" value={activityForm.endDate} onChange={(e) => setActivityForm({ ...activityForm, endDate: e.target.value })} className="h-11 rounded-xl" data-testid="input-activity-end-date" />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -1154,7 +1161,7 @@ export default function EventDetailPage() {
                       <div>
                         <p className="font-medium text-sm">{act.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {act.date ? `${new Date(act.date + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ` : ""}{act.startTime} - {act.endTime} hrs | {act.description}
+                          {act.startDate ? `${new Date(act.startDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ${act.startTime} hrs` : act.startTime}{" - "}{act.endDate && act.endDate !== act.startDate ? `${new Date(act.endDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ` : ""}{act.endTime} hrs | {act.description}
                         </p>
                       </div>
                     </div>

@@ -18,15 +18,14 @@ A frontend-only event management dashboard (boletera) built with React, TypeScri
 6. Event status management (Borrador → En revisión → Publicado)
 7. Event preview mode (read-only view as customers would see it)
 8. Create new events with date ranges (startDate/endDate)
-9. Activities with single date + time range (date, startTime/endTime) - same day only
+9. Activities with time ranges (startTime/endTime)
 10. Products/merchandise management per event
 11. Ticket reservation with strict validation (max 8 per user per event)
 
 ## Schema Notes
 - Event has `startDate`/`endDate` (not single `date`)
 - Event has `status` field: "borrador" | "en_revision" | "publicado"
-- Activity has `date` (single day), `startTime`/`endTime`
-- Activity display format: "16 abr 20:00 - 23:00 hrs"
+- Activity has `startTime`/`endTime` (not single `time`)
 - Product interface: id, name, price, available
 
 ## Project Structure
