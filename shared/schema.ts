@@ -46,8 +46,7 @@ export interface Zone {
 export interface Activity {
   id: string;
   name: string;
-  startDate: string;
-  endDate: string;
+  date: string;
   startTime: string;
   endTime: string;
   description: string;

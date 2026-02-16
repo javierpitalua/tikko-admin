@@ -48,8 +48,8 @@ export function getEvents(): Event[] {
     try {
       const parsed = JSON.parse(raw);
       const needsMigration = parsed.length > 0 && (
-        'date' in parsed[0] || !('startDate' in parsed[0]) || !('status' in parsed[0]) ||
-        (parsed[0].activities?.length > 0 && !('startDate' in parsed[0].activities[0]))
+        !('startDate' in parsed[0]) || !('status' in parsed[0]) ||
+        (parsed[0].activities?.length > 0 && !('date' in parsed[0].activities[0]))
       );
       if (needsMigration) {
         localStorage.removeItem(STORAGE_KEYS.EVENTS);
@@ -117,8 +117,8 @@ function getSeedEvents(): Event[] {
         { id: "z1-3", name: "General", capacity: 2000, price: 800, sold: 1450 },
       ],
       activities: [
-        { id: "a1-1", name: "Meet & Greet", startDate: "2026-04-15", endDate: "2026-04-15", startTime: "14:00", endTime: "15:30", description: "Conoce a los artistas" },
-        { id: "a1-2", name: "Banda Principal", startDate: "2026-04-16", endDate: "2026-04-17", startTime: "20:00", endTime: "23:00", description: "Presentación estelar" },
+        { id: "a1-1", name: "Meet & Greet", date: "2026-04-15", startTime: "14:00", endTime: "15:30", description: "Conoce a los artistas" },
+        { id: "a1-2", name: "Banda Principal", date: "2026-04-16", startTime: "20:00", endTime: "23:00", description: "Presentación estelar" },
       ],
       coupons: [
         { id: "c1-1", code: "ROCK20", discount: 20, active: true },
@@ -148,9 +148,9 @@ function getSeedEvents(): Event[] {
         { id: "z2-3", name: "Standard", capacity: 1000, price: 1200, sold: 650 },
       ],
       activities: [
-        { id: "a2-1", name: "Keynote IA", startDate: "2026-05-22", endDate: "2026-05-22", startTime: "10:00", endTime: "12:00", description: "El futuro de la inteligencia artificial" },
-        { id: "a2-2", name: "Workshop Cloud", startDate: "2026-05-23", endDate: "2026-05-23", startTime: "14:00", endTime: "17:00", description: "Taller práctico de cloud computing" },
-        { id: "a2-3", name: "Networking", startDate: "2026-05-24", endDate: "2026-05-24", startTime: "18:00", endTime: "20:00", description: "Sesión de networking" },
+        { id: "a2-1", name: "Keynote IA", date: "2026-05-22", startTime: "10:00", endTime: "12:00", description: "El futuro de la inteligencia artificial" },
+        { id: "a2-2", name: "Workshop Cloud", date: "2026-05-23", startTime: "14:00", endTime: "17:00", description: "Taller práctico de cloud computing" },
+        { id: "a2-3", name: "Networking", date: "2026-05-24", startTime: "18:00", endTime: "20:00", description: "Sesión de networking" },
       ],
       coupons: [
         { id: "c2-1", code: "TECH30", discount: 30, active: true },
@@ -178,8 +178,8 @@ function getSeedEvents(): Event[] {
         { id: "z3-3", name: "Sol", capacity: 3000, price: 500, sold: 2100 },
       ],
       activities: [
-        { id: "a3-1", name: "Ceremonia apertura", startDate: "2026-06-10", endDate: "2026-06-10", startTime: "09:00", endTime: "10:30", description: "Ceremonia de apertura del torneo" },
-        { id: "a3-2", name: "Final", startDate: "2026-06-15", endDate: "2026-06-15", startTime: "17:00", endTime: "19:00", description: "Partido de la final" },
+        { id: "a3-1", name: "Ceremonia apertura", date: "2026-06-10", startTime: "09:00", endTime: "10:30", description: "Ceremonia de apertura del torneo" },
+        { id: "a3-2", name: "Final", date: "2026-06-15", startTime: "17:00", endTime: "19:00", description: "Partido de la final" },
       ],
       coupons: [
         { id: "c3-1", code: "GOL15", discount: 15, active: true },
@@ -209,8 +209,8 @@ function getSeedEvents(): Event[] {
         { id: "z4-3", name: "Acceso General", capacity: 1500, price: 650, sold: 980 },
       ],
       activities: [
-        { id: "a4-1", name: "Masterclass", startDate: "2026-07-05", endDate: "2026-07-05", startTime: "11:00", endTime: "13:00", description: "Clase magistral de cocina mexicana" },
-        { id: "a4-2", name: "Degustación", startDate: "2026-07-06", endDate: "2026-07-07", startTime: "15:00", endTime: "17:00", description: "Degustación de platillos" },
+        { id: "a4-1", name: "Masterclass", date: "2026-07-05", startTime: "11:00", endTime: "13:00", description: "Clase magistral de cocina mexicana" },
+        { id: "a4-2", name: "Degustación", date: "2026-07-06", startTime: "15:00", endTime: "17:00", description: "Degustación de platillos" },
       ],
       coupons: [
         { id: "c4-1", code: "FOODIE25", discount: 25, active: true },
@@ -237,8 +237,8 @@ function getSeedEvents(): Event[] {
         { id: "z5-2", name: "Sala Alterna", capacity: 150, price: 250, sold: 100 },
       ],
       activities: [
-        { id: "a5-1", name: "Proyección inaugural", startDate: "2026-08-20", endDate: "2026-08-20", startTime: "10:00", endTime: "12:30", description: "Película de apertura" },
-        { id: "a5-2", name: "Q&A con directores", startDate: "2026-08-22", endDate: "2026-08-22", startTime: "16:00", endTime: "17:30", description: "Sesión con directores invitados" },
+        { id: "a5-1", name: "Proyección inaugural", date: "2026-08-20", startTime: "10:00", endTime: "12:30", description: "Película de apertura" },
+        { id: "a5-2", name: "Q&A con directores", date: "2026-08-22", startTime: "16:00", endTime: "17:30", description: "Sesión con directores invitados" },
       ],
       coupons: [],
       products: [
