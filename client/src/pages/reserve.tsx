@@ -9,16 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import {
   Ticket, User, Mail, Phone, Calendar, MapPin, AlertCircle,
-  CheckCircle2, Copy, Clock, ChevronDown,
+  CheckCircle2, Copy, Clock,
 } from "lucide-react";
 
 const STATUS_CONFIG: Record<ReservationStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -451,29 +445,9 @@ export default function ReservePage() {
                           </span>
                         </td>
                         <td className="py-3 px-3">
-                          {r.status === "apartado" ? (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="gap-1 px-2" data-testid={`button-status-${r.id}`}>
-                                  <Badge variant={cfg.variant}>{cfg.label}</Badge>
-                                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="start">
-                                {(Object.entries(STATUS_CONFIG) as [ReservationStatus, typeof cfg][]).map(([key, val]) => (
-                                  <DropdownMenuItem
-                                    key={key}
-                                    onClick={() => updateReservationStatus(r.id, key)}
-                                    data-testid={`menu-status-${key}-${r.id}`}
-                                  >
-                                    <Badge variant={val.variant} className="mr-2">{val.label}</Badge>
-                                  </DropdownMenuItem>
-                                ))}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          ) : (
-                            <Badge variant={cfg.variant} data-testid={`badge-status-${r.id}`}>{cfg.label}</Badge>
-                          )}
+                          <Badge variant={remaining.expired && r.status === "apartado" ? STATUS_CONFIG.expirado.variant : cfg.variant} data-testid={`badge-status-${r.id}`}>
+                            {remaining.expired && r.status === "apartado" ? STATUS_CONFIG.expirado.label : cfg.label}
+                          </Badge>
                         </td>
                       </tr>
                     );
