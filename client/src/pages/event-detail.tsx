@@ -659,7 +659,7 @@ export default function EventDetailPage() {
                       <p className="font-medium">{act.name}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <Badge variant="secondary" className="text-[11px] font-normal">
-                          {act.startDate ? new Date(act.startDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" }) : ""}{act.endDate && act.endDate !== act.startDate ? ` - ${new Date(act.endDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })}` : ""} {act.startTime} - {act.endTime}
+                          {act.startDate ? `${new Date(act.startDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ${act.startTime} hrs` : act.startTime}{" - "}{act.endDate && act.endDate !== act.startDate ? `${new Date(act.endDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ` : ""}{act.endTime} hrs
                         </Badge>
                         <span className="text-xs text-muted-foreground truncate">{act.description}</span>
                       </div>
@@ -1161,7 +1161,7 @@ export default function EventDetailPage() {
                       <div>
                         <p className="font-medium text-sm">{act.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {act.startDate ? new Date(act.startDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" }) : ""}{act.endDate && act.endDate !== act.startDate ? ` - ${new Date(act.endDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })}` : ""} {act.startTime} - {act.endTime} | {act.description}
+                          {act.startDate ? `${new Date(act.startDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ${act.startTime} hrs` : act.startTime}{" - "}{act.endDate && act.endDate !== act.startDate ? `${new Date(act.endDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ` : ""}{act.endTime} hrs | {act.description}
                         </p>
                       </div>
                     </div>
