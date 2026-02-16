@@ -47,7 +47,11 @@ export function getEvents(): Event[] {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      if (parsed.length > 0 && ('date' in parsed[0] || !('startDate' in parsed[0]) || !('status' in parsed[0]))) {
+      const needsMigration = parsed.length > 0 && (
+        'date' in parsed[0] || !('startDate' in parsed[0]) || !('status' in parsed[0]) ||
+        (parsed[0].activities?.length > 0 && !('startDate' in parsed[0].activities[0]))
+      );
+      if (needsMigration) {
         localStorage.removeItem(STORAGE_KEYS.EVENTS);
       } else {
         return parsed;
