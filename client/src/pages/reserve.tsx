@@ -17,6 +17,7 @@ import {
 import { ReservacionesService } from "../../api/services/ReservacionesService";
 import { EventosService } from "../../api/services/EventosService";
 import { ZonasEventoService } from "../../api/services/ZonasEventoService";
+import { EstadosDeReservacionService } from "../../api/services/EstadosDeReservacionService";
 import type { ReservacionesListItem } from "../../api/models/ReservacionesListItem";
 import type { EventosListItem } from "../../api/models/EventosListItem";
 import type { ZonasEventoListItem } from "../../api/models/ZonasEventoListItem";
@@ -110,6 +111,13 @@ export default function ReservePage() {
   async function onSubmit(data: ReserveFormInput) {
     setSubmitting(true);
     try {
+      const statusRes = await EstadosDeReservacionService.getApiV1EstadosDeReservacionList();
+      const statuses = statusRes.items || [];
+      const apartadoStatus = statuses.find((s: any) =>
+        (s.clave || s.descripcion || "").toLowerCase().includes("apartad")
+      );
+      const estadoDeReservacionId = apartadoStatus?.id || statuses[0]?.id || 1;
+
       const now = new Date();
       const expiration = new Date(now.getTime() + 48 * 3600000);
       const zone = apiZones.find((z) => String(z.id) === data.zonaEventoId);
@@ -121,7 +129,7 @@ export default function ReservePage() {
         telefono: data.telefono,
         eventoId: Number(data.eventoId),
         zonaEventoId: Number(data.zonaEventoId),
-        estadoDeReservacionId: 1,
+        estadoDeReservacionId,
         cantidadBoletos: data.cantidadBoletos,
         precioUnitario: precioUnitario,
         subtotal: precioUnitario * data.cantidadBoletos,
@@ -135,7 +143,8 @@ export default function ReservePage() {
       await loadApiReservations();
     } catch (err: any) {
       console.error("Error creating reservation:", err);
-      toast({ title: "Error al crear la reservación", description: err?.message || "Intenta de nuevo", variant: "destructive" });
+      const detail = err?.body?.detail || err?.body?.title || err?.message || "Intenta de nuevo";
+      toast({ title: "Error al crear la reservación", description: detail, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
