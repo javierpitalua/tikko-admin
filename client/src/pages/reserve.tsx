@@ -452,7 +452,6 @@ export default function ReservePage() {
                     <th className="text-center py-3 px-3 font-medium text-muted-foreground">Boletos</th>
                     <th className="text-right py-3 px-3 font-medium text-muted-foreground">Subtotal</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Fecha</th>
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Expiración</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Estado</th>
                   </tr>
                 </thead>
@@ -492,14 +491,6 @@ export default function ReservePage() {
                         </td>
                         <td className="py-3 px-3 text-muted-foreground">
                           {r.fechaReservacion ? new Date(r.fechaReservacion).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
-                        </td>
-                        <td className="py-3 px-3">
-                          {r.fechaExpiracion ? (
-                            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                              <Clock className="w-3.5 h-3.5" />
-                              {new Date(r.fechaExpiracion).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
-                            </span>
-                          ) : "—"}
                         </td>
                         <td className="py-3 px-3">
                           <Badge variant={badgeVariant} data-testid={`badge-status-${r.id}`}>
