@@ -5,6 +5,7 @@ import { OpenAPI } from "../../api/core/OpenAPI";
 interface AdminInfo {
   email: string;
   name: string;
+  role: string;
 }
 
 interface AuthState {
@@ -20,12 +21,38 @@ interface AuthContextType extends AuthState {
 const AUTH_KEY = "tikko_auth";
 const TOKEN_KEY = "tikko_token";
 
+function parseJwtPayload(token: string): Record<string, any> {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return {};
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = atob(payload);
+    return JSON.parse(decoded);
+  } catch {
+    return {};
+  }
+}
+
+function extractRoleFromToken(token: string): string {
+  const payload = parseJwtPayload(token);
+  const role =
+    payload["role"] ||
+    payload["roles"] ||
+    payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+    "";
+  if (Array.isArray(role)) return role[0] || "";
+  return String(role);
+}
+
 function getStoredAuth(): { admin: AdminInfo; token: string } | null {
   try {
     const authRaw = localStorage.getItem(AUTH_KEY);
     const token = localStorage.getItem(TOKEN_KEY);
     if (authRaw && token) {
       const admin = JSON.parse(authRaw) as AdminInfo;
+      if (!admin.role && token) {
+        admin.role = extractRoleFromToken(token);
+      }
       return { admin, token };
     }
   } catch {}
@@ -66,9 +93,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.isValid && response.token) {
         OpenAPI.TOKEN = response.token;
 
+        const role = extractRoleFromToken(response.token);
+
         const adminInfo: AdminInfo = {
           email,
           name: email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+          role,
         };
 
         storeAuth(adminInfo, response.token);

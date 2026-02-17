@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { getEvents, saveEvents, generateId } from "@/lib/store";
+import { useAuth } from "@/lib/auth-context";
 import { EventosService } from "../../api/services/EventosService";
 import { ActividadesEventoService } from "../../api/services/ActividadesEventoService";
 import { ZonasEventoService } from "../../api/services/ZonasEventoService";
@@ -41,7 +42,13 @@ export default function EventDetailPage() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { admin } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isApprover = (() => {
+    const role = (admin?.role || "").toLowerCase();
+    return role.includes("aprobador") || role.includes("approver") || role.includes("admin");
+  })();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [apiItem, setApiItem] = useState<EventosListItem | null>(null);
@@ -999,17 +1006,19 @@ export default function EventDetailPage() {
             {reviewLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1.5" />}
             {reviewLoading ? "Enviando..." : "Revisión"}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={approveEvent}
-            disabled={approveLoading || event.status === "publicado"}
-            className="rounded-xl"
-            data-testid="button-approve-event"
-          >
-            {approveLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5 mr-1.5" />}
-            {approveLoading ? "Aprobando..." : "Aprobar"}
-          </Button>
+          {isApprover && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={approveEvent}
+              disabled={approveLoading || event.status === "publicado"}
+              className="rounded-xl"
+              data-testid="button-approve-event"
+            >
+              {approveLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5 mr-1.5" />}
+              {approveLoading ? "Aprobando..." : "Aprobar"}
+            </Button>
+          )}
           <Button variant="destructive" size="sm" onClick={() => setDeleteDialog(true)} className="rounded-xl" data-testid="button-delete-event">
             <Trash2 className="w-3.5 h-3.5 mr-1.5" />
             Eliminar
