@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { getEvents, saveEvents, generateId } from "@/lib/store";
 import { EventosService } from "../../api/services/EventosService";
+import { ActividadesEventoService } from "../../api/services/ActividadesEventoService";
 import { TiposDeCategoriaEventoService } from "../../api/services/TiposDeCategoriaEventoService";
 import { UbicacionesService } from "../../api/services/UbicacionesService";
 import type { EventosListItem } from "../../api/models/EventosListItem";
+import type { ActividadesEventoListItem } from "../../api/models/ActividadesEventoListItem";
 import type { EditEventoRequest } from "../../api/models/EditEventoRequest";
 import type { Event, Zone, Activity, Coupon, Product, EventStatus } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,6 +63,36 @@ export default function EventDetailPage() {
   const [productForm, setProductForm] = useState({ name: "", price: "", available: true });
   const [confirmDelete, setConfirmDelete] = useState<{ type: string; id: string; name: string } | null>(null);
 
+  function mapApiActivitiesToLocal(items: ActividadesEventoListItem[]): Activity[] {
+    return items.map((item) => {
+      let startDate = "";
+      let startTime = "";
+      let endDate = "";
+      let endTime = "";
+
+      if (item.fechaHoraInicio) {
+        const d = new Date(item.fechaHoraInicio);
+        startDate = d.toISOString().split("T")[0];
+        startTime = d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
+      }
+      if (item.fechaHoraFin) {
+        const d = new Date(item.fechaHoraFin);
+        endDate = d.toISOString().split("T")[0];
+        endTime = d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
+      }
+
+      return {
+        id: String(item.id),
+        name: item.nombre || "",
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        description: item.descripcion || "",
+      };
+    });
+  }
+
   function mapApiEventToLocal(item: EventosListItem): Event {
     const statusRaw = (item.estadoDeEvento || "").toLowerCase();
     let status: EventStatus = "borrador";
@@ -100,13 +132,16 @@ export default function EventDetailPage() {
       EventosService.getApiV1EventosList(undefined, undefined, undefined, undefined, numericId),
       TiposDeCategoriaEventoService.getApiV1TiposDeCategoriaEventoList().catch(() => ({ items: [] })),
       UbicacionesService.getApiV1UbicacionesList().catch(() => ({ items: [] })),
+      ActividadesEventoService.getApiV1ActividadesEventoList(numericId).catch(() => ({ items: [] })),
     ])
-      .then(([eventRes, catRes, locRes]) => {
+      .then(([eventRes, catRes, locRes, actRes]) => {
         const items = eventRes.items || [];
         if (items.length > 0) {
           const raw = items[0];
           setApiItem(raw);
           const found = mapApiEventToLocal(raw);
+          const activities = mapApiActivitiesToLocal((actRes as any).items || []);
+          found.activities = activities;
           setEvent(found);
           setDraft({
             name: found.name,
