@@ -6,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { EventosService } from "../../api/services/EventosService";
 import { TiposDeCategoriaEventoService } from "../../api/services/TiposDeCategoriaEventoService";
 import { UbicacionesService } from "../../api/services/UbicacionesService";
-import type { SelectListItem } from "../../api/models/SelectListItem";
 import type { UbicacionesListItem } from "../../api/models/UbicacionesListItem";
+import type { TiposDeCategoriaEventoListItem } from "../../api/models/TiposDeCategoriaEventoListItem";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ export default function EventNewPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [bannerImage, setBannerImage] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
-  const [categories, setCategories] = useState<SelectListItem[]>([]);
+  const [categories, setCategories] = useState<TiposDeCategoriaEventoListItem[]>([]);
   const [locations, setLocations] = useState<UbicacionesListItem[]>([]);
   const [loadingCatalogs, setLoadingCatalogs] = useState(true);
 
@@ -50,7 +50,7 @@ export default function EventNewPage() {
 
   useEffect(() => {
     Promise.all([
-      TiposDeCategoriaEventoService.getApiV1TiposDeCategoriaEventoLoadSelectList(),
+      TiposDeCategoriaEventoService.getApiV1TiposDeCategoriaEventoList(),
       UbicacionesService.getApiV1UbicacionesList(),
     ])
       .then(([catRes, locRes]) => {
@@ -115,7 +115,7 @@ export default function EventNewPage() {
     return new Date(dateStr + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
   }
 
-  const selectedCatName = categories.find((c) => c.value === watchedValues.tipoDeCategoriaEventoId)?.text || "";
+  const selectedCatName = categories.find((c) => String(c.id) === watchedValues.tipoDeCategoriaEventoId)?.nombre || "";
   const selectedLocName = locations.find((l) => String(l.id) === watchedValues.ubicacionId)?.nombre || "";
 
   const previewImage = bannerImage || placeholderBanner;
@@ -246,7 +246,7 @@ export default function EventNewPage() {
                           </FormControl>
                           <SelectContent>
                             {categories.map((cat) => (
-                              <SelectItem key={cat.value} value={cat.value || ""}>{cat.text}</SelectItem>
+                              <SelectItem key={cat.id} value={String(cat.id || "")}>{cat.nombre}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
