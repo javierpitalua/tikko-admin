@@ -20,7 +20,7 @@ export type OpenAPIConfig = {
 };
 
 export const OpenAPI: OpenAPIConfig = {
-    BASE: '',
+    BASE: 'https://dev-api.tikko.mx',
     VERSION: '1',
     WITH_CREDENTIALS: false,
     CREDENTIALS: 'include',
