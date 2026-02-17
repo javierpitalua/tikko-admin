@@ -20,7 +20,16 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const metricCards = [
+  const metricCards: Array<{
+    id: string;
+    title: string;
+    icon: typeof Calendar;
+    value: number;
+    iconBg: string;
+    iconColor: string;
+    subtitle: string;
+    href?: string;
+  }> = [
     {
       id: "events",
       title: "Eventos Creados",
@@ -29,6 +38,7 @@ export default function DashboardPage() {
       iconBg: "bg-chart-3/10",
       iconColor: "text-chart-3",
       subtitle: "Total de eventos registrados",
+      href: "/events",
     },
     {
       id: "published",
@@ -38,6 +48,7 @@ export default function DashboardPage() {
       iconBg: "bg-primary/10",
       iconColor: "text-primary",
       subtitle: "Eventos visibles al público",
+      href: "/events",
     },
     {
       id: "upcoming",
@@ -47,6 +58,7 @@ export default function DashboardPage() {
       iconBg: "bg-chart-4/10",
       iconColor: "text-chart-4",
       subtitle: "Eventos por iniciar",
+      href: "/events",
     },
     {
       id: "categories",
@@ -56,6 +68,7 @@ export default function DashboardPage() {
       iconBg: "bg-chart-2/10",
       iconColor: "text-chart-2",
       subtitle: "Tipos de eventos",
+      href: "/events",
     },
   ];
 
@@ -79,7 +92,12 @@ export default function DashboardPage() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {metricCards.map((m) => (
-              <Card key={m.id} className="hover-elevate" data-testid={`card-metric-${m.id}`}>
+              <Card
+                key={m.id}
+                className={`hover-elevate${m.href ? " cursor-pointer" : ""}`}
+                onClick={m.href ? () => navigate(m.href!) : undefined}
+                data-testid={`card-metric-${m.id}`}
+              >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{m.title}</p>
