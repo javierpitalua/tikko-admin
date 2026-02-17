@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { getEvents, saveEvents, generateId } from "@/lib/store";
 import { EventosService } from "../../api/services/EventosService";
+import { TiposDeCategoriaEventoService } from "../../api/services/TiposDeCategoriaEventoService";
+import { UbicacionesService } from "../../api/services/UbicacionesService";
 import type { EventosListItem } from "../../api/models/EventosListItem";
+import type { EditEventoRequest } from "../../api/models/EditEventoRequest";
 import type { Event, Zone, Activity, Coupon, Product, EventStatus } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,10 +34,14 @@ export default function EventDetailPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [event, setEvent] = useState<Event | null>(null);
+  const [apiItem, setApiItem] = useState<EventosListItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState({ name: "", startDate: "", endDate: "", location: "", category: "", description: "", image: "" });
+  const [draft, setDraft] = useState({ name: "", startDate: "", endDate: "", ubicacionId: "", tipoDeCategoriaEventoId: "", description: "", image: "" });
+  const [categories, setCategories] = useState<Array<{ id?: number; nombre?: string | null }>>([]);
+  const [locations, setLocations] = useState<Array<{ id?: number; nombre?: string | null }>>([]);
 
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -88,24 +95,33 @@ export default function EventDetailPage() {
 
     setLoading(true);
     setNotFound(false);
-    EventosService.getApiV1EventosList(undefined, undefined, undefined, undefined, numericId)
-      .then((res) => {
-        const items = res.items || [];
+
+    Promise.all([
+      EventosService.getApiV1EventosList(undefined, undefined, undefined, undefined, numericId),
+      TiposDeCategoriaEventoService.getApiV1TiposDeCategoriaEventoList().catch(() => ({ items: [] })),
+      UbicacionesService.getApiV1UbicacionesList().catch(() => ({ items: [] })),
+    ])
+      .then(([eventRes, catRes, locRes]) => {
+        const items = eventRes.items || [];
         if (items.length > 0) {
-          const found = mapApiEventToLocal(items[0]);
+          const raw = items[0];
+          setApiItem(raw);
+          const found = mapApiEventToLocal(raw);
           setEvent(found);
           setDraft({
             name: found.name,
             startDate: found.startDate,
             endDate: found.endDate,
-            location: found.location,
-            category: found.category,
+            ubicacionId: raw.ubicacionId ? String(raw.ubicacionId) : "",
+            tipoDeCategoriaEventoId: raw.tipoDeCategoriaEventoId ? String(raw.tipoDeCategoriaEventoId) : "",
             description: found.description,
             image: found.image,
           });
         } else {
           setNotFound(true);
         }
+        setCategories((catRes as any).items || []);
+        setLocations((locRes as any).items || []);
       })
       .catch((err) => {
         console.error("Error fetching event:", err);
@@ -147,8 +163,8 @@ export default function EventDetailPage() {
       name: event!.name,
       startDate: event!.startDate,
       endDate: event!.endDate,
-      location: event!.location,
-      category: event!.category,
+      ubicacionId: apiItem?.ubicacionId ? String(apiItem.ubicacionId) : "",
+      tipoDeCategoriaEventoId: apiItem?.tipoDeCategoriaEventoId ? String(apiItem.tipoDeCategoriaEventoId) : "",
       description: event!.description,
       image: event!.image,
     });
@@ -160,8 +176,8 @@ export default function EventDetailPage() {
       name: event!.name,
       startDate: event!.startDate,
       endDate: event!.endDate,
-      location: event!.location,
-      category: event!.category,
+      ubicacionId: apiItem?.ubicacionId ? String(apiItem.ubicacionId) : "",
+      tipoDeCategoriaEventoId: apiItem?.tipoDeCategoriaEventoId ? String(apiItem.tipoDeCategoriaEventoId) : "",
       description: event!.description,
       image: event!.image,
     });
@@ -169,24 +185,61 @@ export default function EventDetailPage() {
   }
 
   function saveBasicInfo() {
-    if (!event) return;
-    if (!draft.name.trim() || !draft.startDate || !draft.endDate || !draft.location.trim() || !draft.category) {
+    if (!event || !apiItem) return;
+    if (!draft.name.trim() || !draft.startDate || !draft.endDate || !draft.ubicacionId || !draft.tipoDeCategoriaEventoId) {
       toast({ title: "Completa todos los campos obligatorios", variant: "destructive" });
       return;
     }
-    const updated: Event = {
-      ...event,
-      name: draft.name.trim(),
-      startDate: draft.startDate,
-      endDate: draft.endDate,
-      location: draft.location.trim(),
-      category: draft.category,
-      description: draft.description.trim(),
-      image: draft.image,
+
+    setSaving(true);
+    const requestBody: EditEventoRequest = {
+      id: Number(event.id),
+      nombre: draft.name.trim(),
+      descripcion: draft.description.trim(),
+      bannerUrl: draft.image || null,
+      fechaInicio: draft.startDate,
+      fechaFin: draft.endDate,
+      ubicacionId: Number(draft.ubicacionId),
+      tipoDeCategoriaEventoId: Number(draft.tipoDeCategoriaEventoId),
+      estadoDeEventoId: apiItem.estadoDeEventoId,
     };
-    persistEvent(updated);
-    setEditing(false);
-    toast({ title: "Evento actualizado" });
+
+    EventosService.postApiV1EventosEdit(requestBody)
+      .then(() => {
+        const selectedLocation = locations.find((l) => l.id === Number(draft.ubicacionId));
+        const selectedCategory = categories.find((c) => c.id === Number(draft.tipoDeCategoriaEventoId));
+
+        const updated: Event = {
+          ...event,
+          name: draft.name.trim(),
+          startDate: draft.startDate,
+          endDate: draft.endDate,
+          location: selectedLocation?.nombre || event.location,
+          category: selectedCategory?.nombre || event.category,
+          description: draft.description.trim(),
+          image: draft.image,
+        };
+        setEvent(updated);
+        setApiItem({
+          ...apiItem,
+          nombre: updated.name,
+          descripcion: updated.description,
+          bannerUrl: updated.image,
+          fechaInicio: updated.startDate,
+          fechaFin: updated.endDate,
+          ubicacionId: Number(draft.ubicacionId),
+          tipoDeCategoriaEventoId: Number(draft.tipoDeCategoriaEventoId),
+          ubicacion: selectedLocation?.nombre || null,
+          tipoDeCategoriaEvento: selectedCategory?.nombre || null,
+        });
+        setEditing(false);
+        toast({ title: "Evento actualizado correctamente" });
+      })
+      .catch((err) => {
+        console.error("Error updating event:", err);
+        toast({ title: "Error al actualizar el evento", description: "Intenta de nuevo más tarde", variant: "destructive" });
+      })
+      .finally(() => setSaving(false));
   }
 
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -577,26 +630,29 @@ export default function EventDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Categoría</Label>
-                    <Select value={draft.category} onValueChange={(val) => setDraft({ ...draft, category: val })}>
+                    <Select value={draft.tipoDeCategoriaEventoId} onValueChange={(val) => setDraft({ ...draft, tipoDeCategoriaEventoId: val })}>
                       <SelectTrigger className="h-11 rounded-xl" data-testid="select-event-category">
-                        <SelectValue placeholder="Categoría" />
+                        <SelectValue placeholder="Selecciona categoría" />
                       </SelectTrigger>
                       <SelectContent>
-                        {CATEGORIES.map((cat) => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        {categories.filter((cat) => cat.id != null).map((cat) => (
+                          <SelectItem key={cat.id} value={String(cat.id)}>{cat.nombre}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Recinto / Ubicación</Label>
-                    <Input
-                      value={draft.location}
-                      onChange={(e) => setDraft({ ...draft, location: e.target.value })}
-                      placeholder="Ej: Arena Ciudad de México"
-                      className="h-11 rounded-xl"
-                      data-testid="input-event-location"
-                    />
+                    <Select value={draft.ubicacionId} onValueChange={(val) => setDraft({ ...draft, ubicacionId: val })}>
+                      <SelectTrigger className="h-11 rounded-xl" data-testid="select-event-location">
+                        <SelectValue placeholder="Selecciona ubicación" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locations.filter((loc) => loc.id != null).map((loc) => (
+                          <SelectItem key={loc.id} value={String(loc.id)}>{loc.nombre}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -639,11 +695,11 @@ export default function EventDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-3 pt-2 flex-wrap">
-                  <Button onClick={saveBasicInfo} className="rounded-xl" data-testid="button-save-event">
-                    <Save className="w-4 h-4 mr-2" />
-                    Guardar Cambios
+                  <Button onClick={saveBasicInfo} disabled={saving} className="rounded-xl" data-testid="button-save-event">
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    {saving ? "Guardando..." : "Guardar Cambios"}
                   </Button>
-                  <Button variant="outline" onClick={cancelEditing} className="rounded-xl" data-testid="button-cancel-edit">
+                  <Button variant="outline" onClick={cancelEditing} disabled={saving} className="rounded-xl" data-testid="button-cancel-edit">
                     Cancelar
                   </Button>
                 </div>
