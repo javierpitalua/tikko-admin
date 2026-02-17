@@ -197,15 +197,24 @@ export default function EventDetailPage() {
       nombre: draft.name.trim(),
       descripcion: draft.description.trim(),
       bannerUrl: draft.image || null,
-      fechaInicio: draft.startDate,
-      fechaFin: draft.endDate,
+      fechaInicio: new Date(draft.startDate + "T00:00:00").toISOString(),
+      fechaFin: new Date(draft.endDate + "T23:59:59").toISOString(),
       ubicacionId: Number(draft.ubicacionId),
       tipoDeCategoriaEventoId: Number(draft.tipoDeCategoriaEventoId),
       estadoDeEventoId: apiItem.estadoDeEventoId,
     };
 
     EventosService.postApiV1EventosEdit(requestBody)
-      .then(() => {
+      .then((result: any) => {
+        if (result && result.ok === false) {
+          const errors = result.validationSummary?.errors;
+          const msg = errors && errors.length > 0
+            ? errors.map((e: any) => e.description || e.errorMessage || "").filter(Boolean).join(", ")
+            : "Error al actualizar el evento";
+          toast({ title: msg, variant: "destructive" });
+          return;
+        }
+
         const selectedLocation = locations.find((l) => l.id === Number(draft.ubicacionId));
         const selectedCategory = categories.find((c) => c.id === Number(draft.tipoDeCategoriaEventoId));
 
@@ -225,8 +234,8 @@ export default function EventDetailPage() {
           nombre: updated.name,
           descripcion: updated.description,
           bannerUrl: updated.image,
-          fechaInicio: updated.startDate,
-          fechaFin: updated.endDate,
+          fechaInicio: draft.startDate,
+          fechaFin: draft.endDate,
           ubicacionId: Number(draft.ubicacionId),
           tipoDeCategoriaEventoId: Number(draft.tipoDeCategoriaEventoId),
           ubicacion: selectedLocation?.nombre || null,
@@ -237,7 +246,9 @@ export default function EventDetailPage() {
       })
       .catch((err) => {
         console.error("Error updating event:", err);
-        toast({ title: "Error al actualizar el evento", description: "Intenta de nuevo más tarde", variant: "destructive" });
+        const errBody = err?.body;
+        const errMsg = errBody?.validationSummary?.errorMessage || errBody?.validationSummary?.errors?.[0]?.description || "Intenta de nuevo más tarde";
+        toast({ title: "Error al actualizar el evento", description: errMsg, variant: "destructive" });
       })
       .finally(() => setSaving(false));
   }
