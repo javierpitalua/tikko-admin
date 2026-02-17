@@ -33,7 +33,7 @@ import {
   ArrowLeft, MapPin, Calendar, Edit2, Plus, Trash2,
   Ticket, Clock, Tag, Save, Users, Image as ImageIcon,
   Upload, X, FileText, DollarSign, ShoppingBag, Building, Package,
-  Send, Eye, Loader2, CheckCircle,
+  Send, Eye, Loader2, CheckCircle, Lock,
 } from "lucide-react";
 
 const CATEGORIES = ["Música", "Tecnología", "Deportes", "Gastronomía", "Cultura", "Teatro", "Arte", "Otro"];
@@ -49,6 +49,8 @@ export default function EventDetailPage() {
     const role = (admin?.role || "").toLowerCase();
     return role.includes("aprobador") || role.includes("approver") || role.includes("admin");
   })();
+
+  const isReadOnly = event?.status === "en_revision" || event?.status === "publicado";
 
   const [event, setEvent] = useState<Event | null>(null);
   const [apiItem, setApiItem] = useState<EventosListItem | null>(null);
@@ -1013,15 +1015,15 @@ export default function EventDetailPage() {
               variant="outline"
               size="sm"
               onClick={startEditing}
-              disabled={activeTab !== "basic"}
+              disabled={activeTab !== "basic" || isReadOnly}
               className="rounded-xl"
               data-testid="button-edit-event"
             >
-              <Edit2 className="w-3.5 h-3.5 mr-1.5" />
+              {isReadOnly ? <Lock className="w-3.5 h-3.5 mr-1.5" /> : <Edit2 className="w-3.5 h-3.5 mr-1.5" />}
               Editar
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={saveEventDraft} disabled={saving} className="rounded-xl" data-testid="button-save-draft">
+          <Button variant="outline" size="sm" onClick={saveEventDraft} disabled={saving || isReadOnly} className="rounded-xl" data-testid="button-save-draft">
             {saving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
             {saving ? "Guardando..." : "Guardar"}
           </Button>
@@ -1053,12 +1055,25 @@ export default function EventDetailPage() {
               {approveLoading ? "Aprobando..." : "Aprobar"}
             </Button>
           )}
-          <Button variant="destructive" size="sm" onClick={requestDeleteEvent} disabled={deleteLoading} className="rounded-xl" data-testid="button-delete-event">
+          <Button variant="destructive" size="sm" onClick={requestDeleteEvent} disabled={deleteLoading || isReadOnly} className="rounded-xl" data-testid="button-delete-event">
             {deleteLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 mr-1.5" />}
             {deleteLoading ? "Cargando..." : "Eliminar"}
           </Button>
         </div>
       </div>
+
+      {isReadOnly && (
+        <Card className="border-primary/30">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Lock className="w-4 h-4 text-primary shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              {event.status === "en_revision"
+                ? "Este evento está en revisión. No se puede editar hasta que sea rechazado."
+                : "Este evento ha sido aprobado. Ya no se puede editar."}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="relative rounded-2xl overflow-hidden shadow-lg">
         <div className="aspect-[21/9] md:aspect-[3/1]">
@@ -1295,7 +1310,7 @@ export default function EventDetailPage() {
               <h2 className="text-base font-semibold">Actividades</h2>
               <p className="text-xs text-muted-foreground mt-0.5">{event.activities.length} actividades registradas</p>
             </div>
-            <Button size="sm" onClick={() => openActivityDialog()} className="rounded-xl" data-testid="button-add-activity">
+            <Button size="sm" onClick={() => openActivityDialog()} disabled={isReadOnly} className="rounded-xl" data-testid="button-add-activity">
               <Plus className="w-4 h-4 mr-1" />
               Agregar
             </Button>
@@ -1319,10 +1334,10 @@ export default function EventDetailPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => openActivityDialog(act)} data-testid={`button-edit-activity-${act.id}`}>
+                    <Button size="icon" variant="ghost" onClick={() => openActivityDialog(act)} disabled={isReadOnly} data-testid={`button-edit-activity-${act.id}`}>
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => requestDelete("activity", act.id, act.name)} data-testid={`button-delete-activity-${act.id}`}>
+                    <Button size="icon" variant="ghost" onClick={() => requestDelete("activity", act.id, act.name)} disabled={isReadOnly} data-testid={`button-delete-activity-${act.id}`}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -1337,7 +1352,7 @@ export default function EventDetailPage() {
                   </div>
                   <p className="font-medium text-foreground">No hay actividades</p>
                   <p className="text-sm text-muted-foreground mt-1">Agrega la primera actividad del evento</p>
-                  <Button size="sm" variant="outline" className="mt-4 rounded-xl" onClick={() => openActivityDialog()}>
+                  <Button size="sm" variant="outline" className="mt-4 rounded-xl" onClick={() => openActivityDialog()} disabled={isReadOnly}>
                     <Plus className="w-4 h-4 mr-1" />
                     Agregar actividad
                   </Button>
@@ -1353,7 +1368,7 @@ export default function EventDetailPage() {
               <h2 className="text-base font-semibold">Zonas del Recinto</h2>
               <p className="text-xs text-muted-foreground mt-0.5">{event.zones.length} zonas configuradas</p>
             </div>
-            <Button size="sm" onClick={() => openZoneDialog()} className="rounded-xl" data-testid="button-add-zone">
+            <Button size="sm" onClick={() => openZoneDialog()} disabled={isReadOnly} className="rounded-xl" data-testid="button-add-zone">
               <Plus className="w-4 h-4 mr-1" />
               Agregar Zona
             </Button>
@@ -1372,10 +1387,10 @@ export default function EventDetailPage() {
                         <h3 className="font-semibold truncate">{zone.name}</h3>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => openZoneDialog(zone)} data-testid={`button-edit-zone-${zone.id}`}>
+                        <Button size="icon" variant="ghost" onClick={() => openZoneDialog(zone)} disabled={isReadOnly} data-testid={`button-edit-zone-${zone.id}`}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" onClick={() => requestDelete("zone", zone.id, zone.name)} data-testid={`button-delete-zone-${zone.id}`}>
+                        <Button size="icon" variant="ghost" onClick={() => requestDelete("zone", zone.id, zone.name)} disabled={isReadOnly} data-testid={`button-delete-zone-${zone.id}`}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -1406,7 +1421,7 @@ export default function EventDetailPage() {
                 </div>
                 <p className="font-medium text-foreground">No hay zonas registradas</p>
                 <p className="text-sm text-muted-foreground mt-1">Define las secciones del recinto</p>
-                <Button size="sm" variant="outline" className="mt-4 rounded-xl" onClick={() => openZoneDialog()}>
+                <Button size="sm" variant="outline" className="mt-4 rounded-xl" onClick={() => openZoneDialog()} disabled={isReadOnly}>
                   <Plus className="w-4 h-4 mr-1" />
                   Agregar primera zona
                 </Button>
@@ -1442,7 +1457,7 @@ export default function EventDetailPage() {
                           <td className="py-3.5 px-5 text-right tabular-nums">{zone.capacity.toLocaleString()}</td>
                           <td className="py-3.5 px-5 text-right font-medium tabular-nums">${(zone.price * zone.capacity).toLocaleString("es-MX")}</td>
                           <td className="py-3.5 px-5 text-right">
-                            <Button size="icon" variant="ghost" onClick={() => openPriceEdit(zone)} data-testid={`button-edit-price-${zone.id}`}>
+                            <Button size="icon" variant="ghost" onClick={() => openPriceEdit(zone)} disabled={isReadOnly} data-testid={`button-edit-price-${zone.id}`}>
                               <Edit2 className="w-4 h-4" />
                             </Button>
                           </td>
@@ -1478,7 +1493,7 @@ export default function EventDetailPage() {
               <h2 className="text-base font-semibold">Productos y Artículos</h2>
               <p className="text-xs text-muted-foreground mt-0.5">{(event.products || []).length} productos registrados</p>
             </div>
-            <Button size="sm" onClick={() => openProductDialog()} className="rounded-xl" data-testid="button-add-product">
+            <Button size="sm" onClick={() => openProductDialog()} disabled={isReadOnly} className="rounded-xl" data-testid="button-add-product">
               <Plus className="w-4 h-4 mr-1" />
               Agregar Producto
             </Button>
@@ -1498,10 +1513,10 @@ export default function EventDetailPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => openProductDialog(product)} data-testid={`button-edit-product-${product.id}`}>
+                      <Button size="icon" variant="ghost" onClick={() => openProductDialog(product)} disabled={isReadOnly} data-testid={`button-edit-product-${product.id}`}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => requestDelete("product", product.id, product.name)} data-testid={`button-delete-product-${product.id}`}>
+                      <Button size="icon" variant="ghost" onClick={() => requestDelete("product", product.id, product.name)} disabled={isReadOnly} data-testid={`button-delete-product-${product.id}`}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -1521,7 +1536,7 @@ export default function EventDetailPage() {
                 </div>
                 <p className="font-medium text-foreground">No hay productos</p>
                 <p className="text-sm text-muted-foreground mt-1">Agrega artículos como camisetas, gorras o souvenirs</p>
-                <Button size="sm" variant="outline" className="mt-4 rounded-xl" onClick={() => openProductDialog()}>
+                <Button size="sm" variant="outline" className="mt-4 rounded-xl" onClick={() => openProductDialog()} disabled={isReadOnly}>
                   <Plus className="w-4 h-4 mr-1" />
                   Agregar primer producto
                 </Button>
@@ -1536,7 +1551,7 @@ export default function EventDetailPage() {
               <h2 className="text-base font-semibold">Cupones de Descuento</h2>
               <p className="text-xs text-muted-foreground mt-0.5">{event.coupons.length} cupones registrados</p>
             </div>
-            <Button size="sm" onClick={() => openCouponDialog()} className="rounded-xl" data-testid="button-add-coupon">
+            <Button size="sm" onClick={() => openCouponDialog()} disabled={isReadOnly} className="rounded-xl" data-testid="button-add-coupon">
               <Plus className="w-4 h-4 mr-1" />
               Agregar Cupón
             </Button>
@@ -1555,10 +1570,10 @@ export default function EventDetailPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => openCouponDialog(coupon)} data-testid={`button-edit-coupon-${coupon.id}`}>
+                      <Button size="icon" variant="ghost" onClick={() => openCouponDialog(coupon)} disabled={isReadOnly} data-testid={`button-edit-coupon-${coupon.id}`}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => requestDelete("coupon", coupon.id, coupon.code)} data-testid={`button-delete-coupon-${coupon.id}`}>
+                      <Button size="icon" variant="ghost" onClick={() => requestDelete("coupon", coupon.id, coupon.code)} disabled={isReadOnly} data-testid={`button-delete-coupon-${coupon.id}`}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -1579,7 +1594,7 @@ export default function EventDetailPage() {
                 </div>
                 <p className="font-medium text-foreground">No hay cupones</p>
                 <p className="text-sm text-muted-foreground mt-1">Crea códigos de descuento para tus clientes</p>
-                <Button size="sm" variant="outline" className="mt-4 rounded-xl" onClick={() => openCouponDialog()}>
+                <Button size="sm" variant="outline" className="mt-4 rounded-xl" onClick={() => openCouponDialog()} disabled={isReadOnly}>
                   <Plus className="w-4 h-4 mr-1" />
                   Agregar primer cupón
                 </Button>
