@@ -390,10 +390,75 @@ export default function EventDetailPage() {
   }
 
   function saveEventDraft() {
-    if (!event) return;
-    const updated: Event = { ...event, status: "borrador" };
-    persistEvent(updated);
-    toast({ title: "Evento guardado como borrador" });
+    if (!event || !apiItem) return;
+    setSaving(true);
+
+    const currentName = editing ? draft.name.trim() : event.name;
+    const currentDesc = editing ? draft.description.trim() : event.description;
+    const currentImage = editing ? draft.image : event.image;
+    const currentStartDate = editing ? draft.startDate : event.startDate;
+    const currentEndDate = editing ? draft.endDate : event.endDate;
+    const currentUbicacionId = editing ? Number(draft.ubicacionId) : (apiItem.ubicacionId || 0);
+    const currentCategoriaId = editing ? Number(draft.tipoDeCategoriaEventoId) : (apiItem.tipoDeCategoriaEventoId || 0);
+
+    const requestBody: EditEventoRequest = {
+      id: Number(event.id),
+      nombre: currentName,
+      descripcion: currentDesc,
+      bannerUrl: currentImage || null,
+      fechaInicio: new Date(currentStartDate + "T00:00:00").toISOString(),
+      fechaFin: new Date(currentEndDate + "T23:59:59").toISOString(),
+      ubicacionId: currentUbicacionId,
+      tipoDeCategoriaEventoId: currentCategoriaId,
+      estadoDeEventoId: apiItem.estadoDeEventoId,
+    };
+
+    EventosService.postApiV1EventosEdit(requestBody)
+      .then((result: any) => {
+        setSaving(false);
+        if (result && result.ok === false) {
+          const errors = result.validationSummary?.errors;
+          const msg = errors && errors.length > 0
+            ? errors.map((e: any) => e.description || e.errorMessage || "").filter(Boolean).join(", ")
+            : "Error al guardar el evento";
+          toast({ title: msg, variant: "destructive" });
+          return;
+        }
+
+        const selectedLocation = locations.find((l) => l.id === currentUbicacionId);
+        const selectedCategory = categories.find((c) => c.id === currentCategoriaId);
+
+        const updated: Event = {
+          ...event,
+          name: currentName,
+          startDate: currentStartDate,
+          endDate: currentEndDate,
+          location: selectedLocation?.nombre || event.location,
+          category: selectedCategory?.nombre || event.category,
+          description: currentDesc,
+          image: currentImage,
+        };
+        setEvent(updated);
+        setApiItem({
+          ...apiItem,
+          nombre: updated.name,
+          descripcion: updated.description,
+          bannerUrl: updated.image,
+          fechaInicio: currentStartDate,
+          fechaFin: currentEndDate,
+          ubicacionId: currentUbicacionId,
+          tipoDeCategoriaEventoId: currentCategoriaId,
+          ubicacion: selectedLocation?.nombre || null,
+          tipoDeCategoriaEvento: selectedCategory?.nombre || null,
+        });
+        if (editing) setEditing(false);
+        toast({ title: "Evento guardado correctamente" });
+      })
+      .catch((err) => {
+        setSaving(false);
+        console.error("Error saving event:", err);
+        toast({ title: "Error al guardar el evento", variant: "destructive" });
+      });
   }
 
   function sendToReview() {
@@ -858,9 +923,9 @@ export default function EventDetailPage() {
               Editar
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={saveEventDraft} className="rounded-xl" data-testid="button-save-draft">
-            <Save className="w-3.5 h-3.5 mr-1.5" />
-            Guardar
+          <Button variant="outline" size="sm" onClick={saveEventDraft} disabled={saving} className="rounded-xl" data-testid="button-save-draft">
+            {saving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
+            {saving ? "Guardando..." : "Guardar"}
           </Button>
           <Button variant="outline" size="sm" onClick={() => setPreviewDialog(true)} className="rounded-xl" data-testid="button-preview-event">
             <Eye className="w-3.5 h-3.5 mr-1.5" />
