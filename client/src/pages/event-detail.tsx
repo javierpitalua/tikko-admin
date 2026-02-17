@@ -422,13 +422,11 @@ export default function EventDetailPage() {
         fechaHoraFin,
       })
         .then(() => {
-          const updated = { ...event };
-          updated.activities = updated.activities.map((a) =>
-            a.id === editingActivity.id
-              ? { ...a, name: activityForm.name, startDate: activityForm.startDate, endDate: endDate, startTime: activityForm.startTime, endTime: activityForm.endTime, description: activityForm.description }
-              : a
-          );
-          setEvent(updated);
+          ActividadesEventoService.getApiV1ActividadesEventoList(Number(event.id))
+            .then((res) => {
+              const activities = mapApiActivitiesToLocal(res.items || []);
+              setEvent((prev) => prev ? { ...prev, activities } : prev);
+            });
           setActivityDialog(false);
           toast({ title: "Actividad actualizada" });
         })
@@ -448,7 +446,7 @@ export default function EventDetailPage() {
           ActividadesEventoService.getApiV1ActividadesEventoList(Number(event.id))
             .then((res) => {
               const activities = mapApiActivitiesToLocal(res.items || []);
-              setEvent({ ...event, activities });
+              setEvent((prev) => prev ? { ...prev, activities } : prev);
             });
           setActivityDialog(false);
           toast({ title: "Actividad agregada" });
