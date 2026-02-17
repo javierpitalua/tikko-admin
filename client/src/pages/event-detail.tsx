@@ -552,14 +552,7 @@ export default function EventDetailPage() {
           setConfirmDelete({ type, id, name });
         });
     } else if (type === "coupon") {
-      CuponesZonaEventoService.getApiV1CuponesZonaEventoGetDescription(Number(id))
-        .then((res) => {
-          const description = res?.text || res?.value || name;
-          setConfirmDelete({ type, id, name: String(description) });
-        })
-        .catch(() => {
-          setConfirmDelete({ type, id, name });
-        });
+      setConfirmDelete({ type, id, name });
     } else {
       setConfirmDelete({ type, id, name });
     }
