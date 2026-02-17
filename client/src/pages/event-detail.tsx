@@ -62,6 +62,8 @@ export default function EventDetailPage() {
   const [eventStatuses, setEventStatuses] = useState<EstadosDeEventoListItem[]>([]);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [approveLoading, setApproveLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteDescription, setDeleteDescription] = useState("");
 
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -398,11 +400,43 @@ export default function EventDetailPage() {
     reader.readAsDataURL(file);
   }
 
+  function requestDeleteEvent() {
+    if (!event) return;
+    setDeleteLoading(true);
+    EventosService.getApiV1EventosGetDescription(Number(event.id))
+      .then((desc) => {
+        setDeleteDescription(desc.text || desc.description || event.name);
+        setDeleteDialog(true);
+      })
+      .catch(() => {
+        setDeleteDescription(event.name);
+        setDeleteDialog(true);
+      })
+      .finally(() => setDeleteLoading(false));
+  }
+
   function handleDeleteEvent() {
-    const events = getEvents().filter((e) => e.id !== event!.id);
-    saveEvents(events);
-    toast({ title: "Evento eliminado" });
-    navigate("/events");
+    if (!event) return;
+    setDeleteLoading(true);
+    EventosService.postApiV1EventosDelete({ id: Number(event.id) })
+      .then((result: any) => {
+        if (result && result.ok === false) {
+          const errors = result.validationSummary?.errors;
+          const msg = errors && errors.length > 0
+            ? errors.map((e: any) => e.description || e.errorMessage || "").filter(Boolean).join(", ")
+            : "Error al eliminar el evento";
+          toast({ title: msg, variant: "destructive" });
+          setDeleteLoading(false);
+          return;
+        }
+        toast({ title: "Evento eliminado correctamente" });
+        navigate("/events");
+      })
+      .catch((err) => {
+        console.error("Error deleting event:", err);
+        toast({ title: "Error al eliminar el evento", variant: "destructive" });
+        setDeleteLoading(false);
+      });
   }
 
   function findStatusId(keyword: string): number | undefined {
@@ -1019,9 +1053,9 @@ export default function EventDetailPage() {
               {approveLoading ? "Aprobando..." : "Aprobar"}
             </Button>
           )}
-          <Button variant="destructive" size="sm" onClick={() => setDeleteDialog(true)} className="rounded-xl" data-testid="button-delete-event">
-            <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-            Eliminar
+          <Button variant="destructive" size="sm" onClick={requestDeleteEvent} disabled={deleteLoading} className="rounded-xl" data-testid="button-delete-event">
+            {deleteLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 mr-1.5" />}
+            {deleteLoading ? "Cargando..." : "Eliminar"}
           </Button>
         </div>
       </div>
@@ -1734,19 +1768,19 @@ export default function EventDetailPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
+      <Dialog open={deleteDialog} onOpenChange={(open) => { if (!open && !deleteLoading) setDeleteDialog(false); }}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
             <DialogTitle>Eliminar Evento</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar <span className="font-semibold text-foreground">"{event.name}"</span>? Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar <span className="font-semibold text-foreground">"{deleteDescription}"</span>? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialog(false)} className="rounded-xl">Cancelar</Button>
-            <Button variant="destructive" onClick={handleDeleteEvent} className="rounded-xl" data-testid="button-confirm-delete">
-              <Trash2 className="w-4 h-4 mr-1" />
-              Eliminar Evento
+            <Button variant="outline" onClick={() => setDeleteDialog(false)} disabled={deleteLoading} className="rounded-xl">Cancelar</Button>
+            <Button variant="destructive" onClick={handleDeleteEvent} disabled={deleteLoading} className="rounded-xl" data-testid="button-confirm-delete">
+              {deleteLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />}
+              {deleteLoading ? "Eliminando..." : "Eliminar Evento"}
             </Button>
           </DialogFooter>
         </DialogContent>
