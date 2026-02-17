@@ -3,10 +3,12 @@ import { useParams, useLocation } from "wouter";
 import { getEvents, saveEvents, generateId } from "@/lib/store";
 import { EventosService } from "../../api/services/EventosService";
 import { ActividadesEventoService } from "../../api/services/ActividadesEventoService";
+import { ZonasEventoService } from "../../api/services/ZonasEventoService";
 import { TiposDeCategoriaEventoService } from "../../api/services/TiposDeCategoriaEventoService";
 import { UbicacionesService } from "../../api/services/UbicacionesService";
 import type { EventosListItem } from "../../api/models/EventosListItem";
 import type { ActividadesEventoListItem } from "../../api/models/ActividadesEventoListItem";
+import type { ZonasEventoListItem } from "../../api/models/ZonasEventoListItem";
 import type { EditEventoRequest } from "../../api/models/EditEventoRequest";
 import type { Event, Zone, Activity, Coupon, Product, EventStatus } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,6 +95,16 @@ export default function EventDetailPage() {
     });
   }
 
+  function mapApiZonesToLocal(items: ZonasEventoListItem[]): Zone[] {
+    return items.map((item) => ({
+      id: String(item.id),
+      name: item.nombre || "",
+      capacity: item.capacidad || 0,
+      price: item.precio || 0,
+      sold: 0,
+    }));
+  }
+
   function mapApiEventToLocal(item: EventosListItem): Event {
     const statusRaw = (item.estadoDeEvento || "").toLowerCase();
     let status: EventStatus = "borrador";
@@ -133,15 +145,18 @@ export default function EventDetailPage() {
       TiposDeCategoriaEventoService.getApiV1TiposDeCategoriaEventoList().catch(() => ({ items: [] })),
       UbicacionesService.getApiV1UbicacionesList().catch(() => ({ items: [] })),
       ActividadesEventoService.getApiV1ActividadesEventoList(numericId).catch(() => ({ items: [] })),
+      ZonasEventoService.getApiV1ZonasEventoList(numericId).catch(() => ({ items: [] })),
     ])
-      .then(([eventRes, catRes, locRes, actRes]) => {
+      .then(([eventRes, catRes, locRes, actRes, zonRes]) => {
         const items = eventRes.items || [];
         if (items.length > 0) {
           const raw = items[0];
           setApiItem(raw);
           const found = mapApiEventToLocal(raw);
           const activities = mapApiActivitiesToLocal((actRes as any).items || []);
+          const zones = mapApiZonesToLocal((zonRes as any).items || []);
           found.activities = activities;
+          found.zones = zones;
           setEvent(found);
           setDraft({
             name: found.name,
@@ -348,38 +363,84 @@ export default function EventDetailPage() {
   }
 
   function saveZone() {
-    if (!event || !zoneForm.name || !zoneForm.capacity || !zoneForm.price) return;
-    const updated = { ...event };
-    if (editingZone) {
-      updated.zones = updated.zones.map((z) =>
-        z.id === editingZone.id
-          ? { ...z, name: zoneForm.name, capacity: Number(zoneForm.capacity), price: Number(zoneForm.price) }
-          : z
-      );
-    } else {
-      updated.zones = [...updated.zones, {
-        id: generateId(),
-        name: zoneForm.name,
-        capacity: Number(zoneForm.capacity),
-        price: Number(zoneForm.price),
-        sold: 0,
-      }];
+    if (!event || !zoneForm.name || !zoneForm.capacity || !zoneForm.price) {
+      toast({ title: "Completa todos los campos obligatorios", variant: "destructive" });
+      return;
     }
-    persistEvent(updated);
-    setZoneDialog(false);
-    toast({ title: editingZone ? "Zona actualizada" : "Zona agregada" });
+
+    const refreshZones = () => {
+      ZonasEventoService.getApiV1ZonasEventoList(Number(event.id))
+        .then((res) => {
+          const zones = mapApiZonesToLocal(res.items || []);
+          setEvent((prev) => prev ? { ...prev, zones } : prev);
+        });
+    };
+
+    if (editingZone) {
+      ZonasEventoService.postApiV1ZonasEventoEdit({
+        id: Number(editingZone.id),
+        eventoId: Number(event.id),
+        nombre: zoneForm.name,
+        capacidad: Number(zoneForm.capacity),
+        precio: Number(zoneForm.price),
+      })
+        .then(() => {
+          refreshZones();
+          setZoneDialog(false);
+          toast({ title: "Zona actualizada" });
+        })
+        .catch((err) => {
+          console.error("Error updating zone:", err);
+          toast({ title: "Error al actualizar la zona", variant: "destructive" });
+        });
+    } else {
+      ZonasEventoService.postApiV1ZonasEventoCreate({
+        eventoId: Number(event.id),
+        nombre: zoneForm.name,
+        capacidad: Number(zoneForm.capacity),
+        precio: Number(zoneForm.price),
+      })
+        .then(() => {
+          refreshZones();
+          setZoneDialog(false);
+          toast({ title: "Zona agregada" });
+        })
+        .catch((err) => {
+          console.error("Error creating zone:", err);
+          toast({ title: "Error al crear la zona", variant: "destructive" });
+        });
+    }
   }
 
   function deleteZone(zoneId: string) {
     if (!event) return;
-    const updated = { ...event, zones: event.zones.filter((z) => z.id !== zoneId) };
-    persistEvent(updated);
-    toast({ title: "Zona eliminada" });
+    ZonasEventoService.postApiV1ZonasEventoDelete({ id: Number(zoneId) })
+      .then(() => {
+        ZonasEventoService.getApiV1ZonasEventoList(Number(event.id))
+          .then((res) => {
+            const zones = mapApiZonesToLocal(res.items || []);
+            setEvent((prev) => prev ? { ...prev, zones } : prev);
+          });
+        toast({ title: "Zona eliminada" });
+      })
+      .catch((err) => {
+        console.error("Error deleting zone:", err);
+        toast({ title: "Error al eliminar la zona", variant: "destructive" });
+      });
   }
 
   function requestDelete(type: string, id: string, name: string) {
     if (type === "activity") {
       ActividadesEventoService.getApiV1ActividadesEventoGetDescription(Number(id))
+        .then((res) => {
+          const description = res?.text || res?.value || name;
+          setConfirmDelete({ type, id, name: String(description) });
+        })
+        .catch(() => {
+          setConfirmDelete({ type, id, name });
+        });
+    } else if (type === "zone") {
+      ZonasEventoService.getApiV1ZonasEventoGetDescription(Number(id))
         .then((res) => {
           const description = res?.text || res?.value || name;
           setConfirmDelete({ type, id, name: String(description) });
@@ -411,9 +472,24 @@ export default function EventDetailPage() {
           setConfirmDelete(null);
           toast({ title: "Error al eliminar la actividad", variant: "destructive" });
         });
+    } else if (type === "zone") {
+      ZonasEventoService.postApiV1ZonasEventoDelete({ id: Number(id) })
+        .then(() => {
+          ZonasEventoService.getApiV1ZonasEventoList(Number(event.id))
+            .then((res) => {
+              const zones = mapApiZonesToLocal(res.items || []);
+              setEvent((prev) => prev ? { ...prev, zones } : prev);
+            });
+          setConfirmDelete(null);
+          toast({ title: "Zona eliminada" });
+        })
+        .catch((err) => {
+          console.error("Error deleting zone:", err);
+          setConfirmDelete(null);
+          toast({ title: "Error al eliminar la zona", variant: "destructive" });
+        });
     } else {
-      if (type === "zone") deleteZone(id);
-      else if (type === "coupon") deleteCoupon(id);
+      if (type === "coupon") deleteCoupon(id);
       else if (type === "product") deleteProduct(id);
       setConfirmDelete(null);
     }
