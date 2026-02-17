@@ -58,6 +58,8 @@ export interface Coupon {
   code: string;
   discount: number;
   active: boolean;
+  zonaEventoId?: number;
+  zonaEvento?: string;
 }
 
 export interface Product {

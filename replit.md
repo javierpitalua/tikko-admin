@@ -27,8 +27,14 @@ Event management dashboard (boletera) built with React, TypeScript, and Shadcn U
 ## API Integration
 - **Auth**: `AuthService.postApiV1AuthLogin({ userName, password })` → returns JWT token
 - **Events List**: `EventosService.getApiV1EventosList()` → returns `EventosListResponse` with items
+- **Activities**: `ActividadesEventoService` - CRUD for event activities (fechaHoraInicio/fechaHoraFin as ISO datetime)
+- **Zones**: `ZonasEventoService` - CRUD for event zones (nombre, capacidad, precio)
+- **Products**: `ProductosAdicionalEventoService` - CRUD for additional products (eventoId, nombre, esGratuito, precio, disponible)
+- **Coupons**: `CuponesZonaEventoService` - CRUD for zone coupons (zonaEventoId, codigo, porcentajeDescuento). Coupons are per-zone, fetched by iterating zone IDs.
 - **API Models**: `EventosListItem` has fields: id, nombre, descripcion, bannerUrl, fechaInicio, fechaFin, estadoDeEvento, tipoDeCategoriaEvento, ubicacion
 - **Token**: Stored in localStorage as `tikko_token`, set on `OpenAPI.TOKEN` for authenticated requests
+- **Delete pattern**: GetDescription → show confirmation modal → postDelete
+- **Mapper functions**: mapApiActivitiesToLocal, mapApiZonesToLocal, mapApiProductsToLocal, mapApiCouponsToLocal
 
 ## Schema Notes
 - API Event uses: nombre, descripcion, bannerUrl, fechaInicio, fechaFin, estadoDeEvento, tipoDeCategoriaEvento, ubicacion

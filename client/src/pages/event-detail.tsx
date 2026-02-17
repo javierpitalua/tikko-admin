@@ -5,12 +5,14 @@ import { EventosService } from "../../api/services/EventosService";
 import { ActividadesEventoService } from "../../api/services/ActividadesEventoService";
 import { ZonasEventoService } from "../../api/services/ZonasEventoService";
 import { ProductosAdicionalEventoService } from "../../api/services/ProductosAdicionalEventoService";
+import { CuponesZonaEventoService } from "../../api/services/CuponesZonaEventoService";
 import { TiposDeCategoriaEventoService } from "../../api/services/TiposDeCategoriaEventoService";
 import { UbicacionesService } from "../../api/services/UbicacionesService";
 import type { EventosListItem } from "../../api/models/EventosListItem";
 import type { ActividadesEventoListItem } from "../../api/models/ActividadesEventoListItem";
 import type { ZonasEventoListItem } from "../../api/models/ZonasEventoListItem";
 import type { ProductosAdicionalEventoListItem } from "../../api/models/ProductosAdicionalEventoListItem";
+import type { CuponesZonaEventoListItem } from "../../api/models/CuponesZonaEventoListItem";
 import type { EditEventoRequest } from "../../api/models/EditEventoRequest";
 import type { Event, Zone, Activity, Coupon, Product, EventStatus } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,7 +65,7 @@ export default function EventDetailPage() {
 
   const [zoneForm, setZoneForm] = useState({ name: "", capacity: "", price: "" });
   const [activityForm, setActivityForm] = useState({ name: "", startDate: "", endDate: "", startTime: "", endTime: "", description: "" });
-  const [couponForm, setCouponForm] = useState({ code: "", discount: "", active: true });
+  const [couponForm, setCouponForm] = useState({ code: "", discount: "", active: true, zonaEventoId: "" });
   const [productForm, setProductForm] = useState({ name: "", price: "", available: true });
   const [confirmDelete, setConfirmDelete] = useState<{ type: string; id: string; name: string } | null>(null);
   const [priceEditDialog, setPriceEditDialog] = useState(false);
@@ -117,6 +119,34 @@ export default function EventDetailPage() {
       price: item.esGratuito ? 0 : (item.precio || 0),
       available: item.disponible ?? true,
     }));
+  }
+
+  function mapApiCouponsToLocal(items: CuponesZonaEventoListItem[]): Coupon[] {
+    return items.map((item) => ({
+      id: String(item.id),
+      code: item.codigo || "",
+      discount: item.porcentajeDescuento || 0,
+      active: true,
+      zonaEventoId: item.zonaEventoId,
+      zonaEvento: item.zonaEvento || "",
+    }));
+  }
+
+  function refreshCoupons() {
+    if (!event) return;
+    const zoneIds = event.zones.map((z) => Number(z.id));
+    if (zoneIds.length === 0) {
+      setEvent((prev) => prev ? { ...prev, coupons: [] } : prev);
+      return;
+    }
+    Promise.all(zoneIds.map((zid) => CuponesZonaEventoService.getApiV1CuponesZonaEventoList(zid).catch(() => ({ items: [] }))))
+      .then((results) => {
+        const allCoupons: Coupon[] = [];
+        results.forEach((res) => {
+          allCoupons.push(...mapApiCouponsToLocal((res as any).items || []));
+        });
+        setEvent((prev) => prev ? { ...prev, coupons: allCoupons } : prev);
+      });
   }
 
   function mapApiEventToLocal(item: EventosListItem): Event {
@@ -174,7 +204,24 @@ export default function EventDetailPage() {
           found.activities = activities;
           found.zones = zones;
           found.products = products;
-          setEvent(found);
+          const zoneIds = zones.map((z) => Number(z.id));
+          if (zoneIds.length > 0) {
+            Promise.all(zoneIds.map((zid) => CuponesZonaEventoService.getApiV1CuponesZonaEventoList(zid).catch(() => ({ items: [] }))))
+              .then((couponResults) => {
+                const allCoupons: Coupon[] = [];
+                couponResults.forEach((res) => {
+                  allCoupons.push(...mapApiCouponsToLocal((res as any).items || []));
+                });
+                found.coupons = allCoupons;
+                setEvent({ ...found });
+              })
+              .catch(() => {
+                setEvent(found);
+              });
+          } else {
+            found.coupons = [];
+            setEvent(found);
+          }
           setDraft({
             name: found.name,
             startDate: found.startDate,
@@ -504,6 +551,15 @@ export default function EventDetailPage() {
         .catch(() => {
           setConfirmDelete({ type, id, name });
         });
+    } else if (type === "coupon") {
+      CuponesZonaEventoService.getApiV1CuponesZonaEventoGetDescription(Number(id))
+        .then((res) => {
+          const description = res?.text || res?.value || name;
+          setConfirmDelete({ type, id, name: String(description) });
+        })
+        .catch(() => {
+          setConfirmDelete({ type, id, name });
+        });
     } else {
       setConfirmDelete({ type, id, name });
     }
@@ -560,8 +616,19 @@ export default function EventDetailPage() {
           setConfirmDelete(null);
           toast({ title: "Error al eliminar el producto", variant: "destructive" });
         });
+    } else if (type === "coupon") {
+      CuponesZonaEventoService.postApiV1CuponesZonaEventoDelete({ id: Number(id) })
+        .then(() => {
+          refreshCoupons();
+          setConfirmDelete(null);
+          toast({ title: "Cupón eliminado" });
+        })
+        .catch((err) => {
+          console.error("Error deleting coupon:", err);
+          setConfirmDelete(null);
+          toast({ title: "Error al eliminar el cupón", variant: "destructive" });
+        });
     } else {
-      if (type === "coupon") deleteCoupon(id);
       setConfirmDelete(null);
     }
   }
@@ -643,41 +710,52 @@ export default function EventDetailPage() {
   function openCouponDialog(coupon?: Coupon) {
     if (coupon) {
       setEditingCoupon(coupon);
-      setCouponForm({ code: coupon.code, discount: String(coupon.discount), active: coupon.active });
+      setCouponForm({ code: coupon.code, discount: String(coupon.discount), active: coupon.active, zonaEventoId: String(coupon.zonaEventoId || "") });
     } else {
       setEditingCoupon(null);
-      setCouponForm({ code: "", discount: "", active: true });
+      const firstZoneId = event?.zones.length ? event.zones[0].id : "";
+      setCouponForm({ code: "", discount: "", active: true, zonaEventoId: String(firstZoneId) });
     }
     setCouponDialog(true);
   }
 
   function saveCoupon() {
-    if (!event || !couponForm.code || !couponForm.discount) return;
-    const updated = { ...event };
-    if (editingCoupon) {
-      updated.coupons = updated.coupons.map((c) =>
-        c.id === editingCoupon.id
-          ? { ...c, code: couponForm.code, discount: Number(couponForm.discount), active: couponForm.active }
-          : c
-      );
-    } else {
-      updated.coupons = [...updated.coupons, {
-        id: generateId(),
-        code: couponForm.code,
-        discount: Number(couponForm.discount),
-        active: couponForm.active,
-      }];
+    if (!event || !couponForm.code || !couponForm.discount || !couponForm.zonaEventoId) {
+      toast({ title: "Completa todos los campos (código, descuento y zona)", variant: "destructive" });
+      return;
     }
-    persistEvent(updated);
-    setCouponDialog(false);
-    toast({ title: editingCoupon ? "Cupón actualizado" : "Cupón agregado" });
-  }
-
-  function deleteCoupon(couponId: string) {
-    if (!event) return;
-    const updated = { ...event, coupons: event.coupons.filter((c) => c.id !== couponId) };
-    persistEvent(updated);
-    toast({ title: "Cupón eliminado" });
+    if (editingCoupon) {
+      CuponesZonaEventoService.postApiV1CuponesZonaEventoEdit({
+        id: Number(editingCoupon.id),
+        zonaEventoId: Number(couponForm.zonaEventoId),
+        codigo: couponForm.code,
+        porcentajeDescuento: Number(couponForm.discount),
+      })
+        .then(() => {
+          refreshCoupons();
+          setCouponDialog(false);
+          toast({ title: "Cupón actualizado" });
+        })
+        .catch((err) => {
+          console.error("Error editing coupon:", err);
+          toast({ title: "Error al actualizar el cupón", variant: "destructive" });
+        });
+    } else {
+      CuponesZonaEventoService.postApiV1CuponesZonaEventoCreate({
+        zonaEventoId: Number(couponForm.zonaEventoId),
+        codigo: couponForm.code,
+        porcentajeDescuento: Number(couponForm.discount),
+      })
+        .then(() => {
+          refreshCoupons();
+          setCouponDialog(false);
+          toast({ title: "Cupón agregado" });
+        })
+        .catch((err) => {
+          console.error("Error creating coupon:", err);
+          toast({ title: "Error al crear el cupón", variant: "destructive" });
+        });
+    }
   }
 
   function openProductDialog(product?: Product) {
@@ -1305,9 +1383,6 @@ export default function EventDetailPage() {
                       </div>
                       <div>
                         <code className="font-mono font-bold text-primary text-sm">{coupon.code}</code>
-                        <Badge variant={coupon.active ? "default" : "secondary"} className="text-[11px] ml-2">
-                          {coupon.active ? "Activo" : "Inactivo"}
-                        </Badge>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -1320,6 +1395,9 @@ export default function EventDetailPage() {
                     </div>
                   </div>
                   <p className="text-2xl font-bold tabular-nums">{coupon.discount}% OFF</p>
+                  {coupon.zonaEvento && (
+                    <p className="text-xs text-muted-foreground">Zona: {coupon.zonaEvento}</p>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -1444,9 +1522,26 @@ export default function EventDetailPage() {
         <DialogContent className="rounded-2xl">
           <DialogHeader>
             <DialogTitle>{editingCoupon ? "Editar Cupón" : "Nuevo Cupón"}</DialogTitle>
-            <DialogDescription>Define el código de descuento y su porcentaje</DialogDescription>
+            <DialogDescription>Define el código de descuento, porcentaje y la zona asociada</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Zona</Label>
+              {event.zones.length > 0 ? (
+                <select
+                  value={couponForm.zonaEventoId}
+                  onChange={(e) => setCouponForm({ ...couponForm, zonaEventoId: e.target.value })}
+                  className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  data-testid="select-coupon-zone"
+                >
+                  {event.zones.map((z) => (
+                    <option key={z.id} value={z.id}>{z.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-sm text-muted-foreground">No hay zonas creadas. Crea una zona primero.</p>
+              )}
+            </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Código</Label>
               <Input value={couponForm.code} onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })} placeholder="Ej: ROCK20" className="h-11 rounded-xl" data-testid="input-coupon-code" />
@@ -1454,10 +1549,6 @@ export default function EventDetailPage() {
             <div className="space-y-2">
               <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Descuento (%)</Label>
               <Input type="number" value={couponForm.discount} onChange={(e) => setCouponForm({ ...couponForm, discount: e.target.value })} placeholder="Ej: 20" className="h-11 rounded-xl" data-testid="input-coupon-discount" />
-            </div>
-            <div className="flex items-center gap-3">
-              <Label>Activo</Label>
-              <Switch checked={couponForm.active} onCheckedChange={(val) => setCouponForm({ ...couponForm, active: val })} data-testid="switch-coupon-active" />
             </div>
           </div>
           <DialogFooter>
