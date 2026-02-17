@@ -74,7 +74,12 @@ export default function ReservePage() {
     setEventsLoading(true);
     try {
       const res = await EventosService.getApiV1EventosList();
-      setApiEvents(res.items || []);
+      const all = res.items || [];
+      const published = all.filter((e) => {
+        const status = (e.estadoDeEvento || "").toLowerCase();
+        return status.includes("publicado") || status.includes("activo");
+      });
+      setApiEvents(published);
     } catch (err) {
       console.error("Error loading events:", err);
       setApiEvents([]);
