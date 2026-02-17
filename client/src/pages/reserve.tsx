@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { reserveTicketSchema, type ReserveTicketInput, type Reservation, type ReservationStatus } from "@shared/schema";
@@ -12,8 +13,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import {
   Ticket, User, Mail, Phone, Calendar, MapPin, AlertCircle,
-  CheckCircle2, Copy, Clock,
+  CheckCircle2, Copy, Clock, Loader2,
 } from "lucide-react";
+import { ReservacionesService } from "../../api/services/ReservacionesService";
+import type { ReservacionesListItem } from "../../api/models/ReservacionesListItem";
 
 const STATUS_CONFIG: Record<ReservationStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   apartado: { label: "Apartado", variant: "outline" },
@@ -42,15 +45,35 @@ function getTimeRemaining(createdAt: string, status: ReservationStatus): { text:
 
 export default function ReservePage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const events = getEvents();
   const [reservations, setReservations] = useState(getReservations());
   const [lastReservation, setLastReservation] = useState<Reservation | null>(null);
   const [, setTick] = useState(0);
+  const [apiReservations, setApiReservations] = useState<ReservacionesListItem[]>([]);
+  const [apiLoading, setApiLoading] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 60000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    loadApiReservations();
+  }, []);
+
+  async function loadApiReservations() {
+    setApiLoading(true);
+    try {
+      const res = await ReservacionesService.getApiV1ReservacionesList();
+      setApiReservations(res.items || []);
+    } catch (err) {
+      console.error("Error loading reservations:", err);
+      setApiReservations([]);
+    } finally {
+      setApiLoading(false);
+    }
+  }
 
   const form = useForm<ReserveTicketInput>({
     resolver: zodResolver(reserveTicketSchema),
@@ -121,6 +144,7 @@ export default function ReservePage() {
 
     toast({ title: "Boletos apartados con éxito" });
     form.reset();
+    loadApiReservations();
   }
 
   function updateReservationStatus(id: string, newStatus: ReservationStatus) {
@@ -400,53 +424,86 @@ export default function ReservePage() {
         </div>
       </div>
 
-      {reservations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Reservaciones Realizadas ({reservations.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base" data-testid="text-reservations-title">
+            Reservaciones Realizadas {!apiLoading && `(${apiReservations.length})`}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {apiLoading ? (
+            <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground" data-testid="reservations-loading">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Cargando reservaciones...</span>
+            </div>
+          ) : apiReservations.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground" data-testid="reservations-empty">
+              No hay reservaciones registradas
+            </div>
+          ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" data-testid="table-reservations">
                 <thead>
                   <tr className="border-b border-border bg-accent/30">
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Código</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Folio</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Nombre</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Evento</th>
-                    <th className="text-center py-3 px-3 font-medium text-muted-foreground">Cantidad</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Zona</th>
+                    <th className="text-center py-3 px-3 font-medium text-muted-foreground">Boletos</th>
+                    <th className="text-right py-3 px-3 font-medium text-muted-foreground">Subtotal</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Fecha</th>
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Tiempo restante</th>
+                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Expiración</th>
                     <th className="text-left py-3 px-3 font-medium text-muted-foreground">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {reservations.slice().reverse().map((r) => {
-                    const evt = events.find((e) => e.id === r.eventId);
-                    const remaining = getTimeRemaining(r.createdAt, r.status);
-                    const cfg = STATUS_CONFIG[r.status];
+                  {apiReservations.map((r) => {
+                    const statusLower = (r.estadoDeReservacion || "").toLowerCase();
+                    const badgeVariant: "default" | "secondary" | "destructive" | "outline" =
+                      statusLower.includes("vendido") || statusLower.includes("pagad") ? "default"
+                      : statusLower.includes("cancelad") ? "destructive"
+                      : statusLower.includes("expirad") ? "secondary"
+                      : "outline";
                     return (
                       <tr key={r.id} className="border-b border-border last:border-0" data-testid={`row-reservation-${r.id}`}>
                         <td className="py-3 px-3">
-                          <code className="font-mono text-xs font-semibold" data-testid={`text-code-${r.id}`}>{r.code}</code>
+                          <code className="font-mono text-xs font-semibold" data-testid={`text-folio-${r.id}`}>{r.folio || `#${r.id}`}</code>
                         </td>
                         <td className="py-3 px-3">
                           <div>
-                            <p className="font-medium">{r.name}</p>
-                            <p className="text-xs text-muted-foreground">{r.email}</p>
+                            <p className="font-medium">{r.nombre || "—"}</p>
+                            <p className="text-xs text-muted-foreground">{r.correoElectronico || ""}</p>
                           </div>
                         </td>
-                        <td className="py-3 px-3">{evt?.name || "N/A"}</td>
-                        <td className="py-3 px-3 text-center">{r.quantity}</td>
-                        <td className="py-3 px-3 text-muted-foreground">{r.date}</td>
                         <td className="py-3 px-3">
-                          <span className={`flex items-center gap-1.5 text-xs font-medium ${remaining.expired ? "text-muted-foreground" : "text-primary"}`}>
-                            <Clock className="w-3.5 h-3.5" />
-                            {remaining.text}
-                          </span>
+                          <button
+                            type="button"
+                            className="text-left text-primary underline-offset-2 hover:underline cursor-pointer"
+                            onClick={() => navigate("/events")}
+                            data-testid={`link-event-${r.id}`}
+                          >
+                            {r.evento || "—"}
+                          </button>
+                        </td>
+                        <td className="py-3 px-3">{r.zonaEvento || "—"}</td>
+                        <td className="py-3 px-3 text-center">{r.cantidadBoletos ?? 0}</td>
+                        <td className="py-3 px-3 text-right font-medium">
+                          {r.subtotal != null ? `$${r.subtotal.toLocaleString("es-MX")}` : "—"}
+                        </td>
+                        <td className="py-3 px-3 text-muted-foreground">
+                          {r.fechaReservacion ? new Date(r.fechaReservacion).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                         </td>
                         <td className="py-3 px-3">
-                          <Badge variant={remaining.expired && r.status === "apartado" ? STATUS_CONFIG.expirado.variant : cfg.variant} data-testid={`badge-status-${r.id}`}>
-                            {remaining.expired && r.status === "apartado" ? STATUS_CONFIG.expirado.label : cfg.label}
+                          {r.fechaExpiracion ? (
+                            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                              <Clock className="w-3.5 h-3.5" />
+                              {new Date(r.fechaExpiracion).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
+                            </span>
+                          ) : "—"}
+                        </td>
+                        <td className="py-3 px-3">
+                          <Badge variant={badgeVariant} data-testid={`badge-status-${r.id}`}>
+                            {r.estadoDeReservacion || "Desconocido"}
                           </Badge>
                         </td>
                       </tr>
@@ -455,9 +512,9 @@ export default function ReservePage() {
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
