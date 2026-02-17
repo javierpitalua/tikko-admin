@@ -1,9 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { reserveTicketSchema, type ReserveTicketInput, type Reservation, type ReservationStatus } from "@shared/schema";
-import { getEvents, getReservations, saveReservations, generateId, generateReservationCode } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,53 +12,40 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import {
   Ticket, User, Mail, Phone, Calendar, MapPin, AlertCircle,
-  CheckCircle2, Copy, Clock, Loader2,
+  Loader2,
 } from "lucide-react";
 import { ReservacionesService } from "../../api/services/ReservacionesService";
+import { EventosService } from "../../api/services/EventosService";
+import { ZonasEventoService } from "../../api/services/ZonasEventoService";
 import type { ReservacionesListItem } from "../../api/models/ReservacionesListItem";
+import type { EventosListItem } from "../../api/models/EventosListItem";
+import type { ZonasEventoListItem } from "../../api/models/ZonasEventoListItem";
 
-const STATUS_CONFIG: Record<ReservationStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  apartado: { label: "Apartado", variant: "outline" },
-  vendido: { label: "Vendido", variant: "default" },
-  expirado: { label: "Expirado", variant: "secondary" },
-  cancelado: { label: "Cancelado", variant: "destructive" },
-};
+const reserveFormSchema = z.object({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  correoElectronico: z.string().email("Correo electrónico inválido"),
+  telefono: z.string().min(10, "Mínimo 10 dígitos").max(10, "Máximo 10 dígitos"),
+  eventoId: z.string().min(1, "Selecciona un evento"),
+  zonaEventoId: z.string().min(1, "Selecciona una zona"),
+  cantidadBoletos: z.number().min(1, "Mínimo 1 boleto").max(8, "Máximo 8 boletos"),
+});
 
-function getTimeRemaining(createdAt: string, status: ReservationStatus): { text: string; expired: boolean } {
-  if (status === "vendido") return { text: "Confirmado", expired: false };
-  if (status === "cancelado") return { text: "Cancelado", expired: true };
-  if (status === "expirado") return { text: "Expirado", expired: true };
-
-  const created = new Date(createdAt).getTime();
-  const expiresAt = created + 48 * 3600000;
-  const now = Date.now();
-  const diff = expiresAt - now;
-
-  if (diff <= 0) return { text: "Expirado", expired: true };
-
-  const hours = Math.floor(diff / 3600000);
-  const minutes = Math.floor((diff % 3600000) / 60000);
-  if (hours > 0) return { text: `${hours}h ${minutes}m`, expired: false };
-  return { text: `${minutes}m`, expired: false };
-}
+type ReserveFormInput = z.infer<typeof reserveFormSchema>;
 
 export default function ReservePage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const events = getEvents();
-  const [reservations, setReservations] = useState(getReservations());
-  const [lastReservation, setLastReservation] = useState<Reservation | null>(null);
-  const [, setTick] = useState(0);
   const [apiReservations, setApiReservations] = useState<ReservacionesListItem[]>([]);
   const [apiLoading, setApiLoading] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 60000);
-    return () => clearInterval(interval);
-  }, []);
+  const [apiEvents, setApiEvents] = useState<EventosListItem[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [apiZones, setApiZones] = useState<ZonasEventoListItem[]>([]);
+  const [zonesLoading, setZonesLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     loadApiReservations();
+    loadApiEvents();
   }, []);
 
   async function loadApiReservations() {
@@ -75,93 +61,85 @@ export default function ReservePage() {
     }
   }
 
-  const form = useForm<ReserveTicketInput>({
-    resolver: zodResolver(reserveTicketSchema),
+  async function loadApiEvents() {
+    setEventsLoading(true);
+    try {
+      const res = await EventosService.getApiV1EventosList();
+      setApiEvents(res.items || []);
+    } catch (err) {
+      console.error("Error loading events:", err);
+      setApiEvents([]);
+    } finally {
+      setEventsLoading(false);
+    }
+  }
+
+  async function loadZonesForEvent(eventoId: number) {
+    setZonesLoading(true);
+    setApiZones([]);
+    try {
+      const res = await ZonasEventoService.getApiV1ZonasEventoList(eventoId);
+      setApiZones(res.items || []);
+    } catch (err) {
+      console.error("Error loading zones:", err);
+      setApiZones([]);
+    } finally {
+      setZonesLoading(false);
+    }
+  }
+
+  const form = useForm<ReserveFormInput>({
+    resolver: zodResolver(reserveFormSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      eventId: "",
-      zoneId: "",
-      quantity: 1,
+      nombre: "",
+      correoElectronico: "",
+      telefono: "",
+      eventoId: "",
+      zonaEventoId: "",
+      cantidadBoletos: 1,
     },
   });
 
-  const selectedEventId = form.watch("eventId");
-  const selectedZoneId = form.watch("zoneId");
-  const selectedEvent = events.find((e) => e.id === selectedEventId);
-  const selectedZone = selectedEvent?.zones.find((z) => z.id === selectedZoneId);
+  const selectedEventId = form.watch("eventoId");
+  const selectedZoneId = form.watch("zonaEventoId");
+  const selectedEvent = apiEvents.find((e) => String(e.id) === selectedEventId);
+  const selectedZone = apiZones.find((z) => String(z.id) === selectedZoneId);
 
-  const availableZones = useMemo(() => {
-    if (!selectedEvent) return [];
-    return selectedEvent.zones.filter((z) => z.capacity - z.sold > 0);
-  }, [selectedEvent]);
+  const subtotal = selectedZone ? (selectedZone.precio || 0) * (form.watch("cantidadBoletos") || 0) : 0;
 
-  function onSubmit(data: ReserveTicketInput) {
-    setLastReservation(null);
+  async function onSubmit(data: ReserveFormInput) {
+    setSubmitting(true);
+    try {
+      const now = new Date();
+      const expiration = new Date(now.getTime() + 48 * 3600000);
+      const zone = apiZones.find((z) => String(z.id) === data.zonaEventoId);
+      const precioUnitario = zone?.precio || 0;
 
-    const userReservationsForEvent = reservations.filter(
-      (r) => r.email === data.email && r.eventId === data.eventId && (r.status === "apartado" || r.status === "vendido")
-    );
-    const totalExisting = userReservationsForEvent.reduce((sum, r) => sum + r.quantity, 0);
-
-    if (totalExisting + data.quantity > 8) {
-      const remaining = 8 - totalExisting;
-      form.setError("quantity", {
-        message: remaining <= 0
-          ? `Ya tienes 8 boletos apartados para este evento. No puedes apartar más.`
-          : `Solo puedes apartar ${remaining} boleto(s) más para este evento (máximo 8 por usuario por evento).`,
+      await ReservacionesService.postApiV1ReservacionesCreate({
+        nombre: data.nombre,
+        correoElectronico: data.correoElectronico,
+        telefono: data.telefono,
+        eventoId: Number(data.eventoId),
+        zonaEventoId: Number(data.zonaEventoId),
+        estadoDeReservacionId: 1,
+        cantidadBoletos: data.cantidadBoletos,
+        precioUnitario: precioUnitario,
+        subtotal: precioUnitario * data.cantidadBoletos,
+        fechaReservacion: now.toISOString(),
+        fechaExpiracion: expiration.toISOString(),
       });
-      return;
+
+      toast({ title: "Boletos apartados con éxito" });
+      form.reset();
+      setApiZones([]);
+      await loadApiReservations();
+    } catch (err: any) {
+      console.error("Error creating reservation:", err);
+      toast({ title: "Error al crear la reservación", description: err?.message || "Intenta de nuevo", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
     }
-
-    if (selectedZone && data.quantity > selectedZone.capacity - selectedZone.sold) {
-      form.setError("quantity", {
-        message: `Solo quedan ${selectedZone.capacity - selectedZone.sold} boletos disponibles en esta zona.`,
-      });
-      return;
-    }
-
-    const now = new Date();
-    const newReservation: Reservation = {
-      id: generateId(),
-      code: generateReservationCode(),
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      eventId: data.eventId,
-      zoneId: data.zoneId,
-      quantity: data.quantity,
-      date: now.toISOString().split("T")[0],
-      createdAt: now.toISOString(),
-      status: "apartado",
-    };
-
-    const updatedReservations = [...reservations, newReservation];
-    saveReservations(updatedReservations);
-    setReservations(updatedReservations);
-    setLastReservation(newReservation);
-
-    toast({ title: "Boletos apartados con éxito" });
-    form.reset();
-    loadApiReservations();
   }
-
-  function updateReservationStatus(id: string, newStatus: ReservationStatus) {
-    const updated = reservations.map((r) =>
-      r.id === id ? { ...r, status: newStatus } : r
-    );
-    saveReservations(updated);
-    setReservations(updated);
-    toast({ title: `Estado actualizado a "${STATUS_CONFIG[newStatus].label}"` });
-  }
-
-  function copyCode(code: string) {
-    navigator.clipboard.writeText(code);
-    toast({ title: "Código copiado al portapapeles" });
-  }
-
-  const subtotal = selectedZone ? selectedZone.price * (form.watch("quantity") || 0) : 0;
 
   return (
     <div className="space-y-6">
@@ -183,7 +161,7 @@ export default function ReservePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="name"
+                      name="nombre"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Nombre completo</FormLabel>
@@ -199,7 +177,7 @@ export default function ReservePage() {
                     />
                     <FormField
                       control={form.control}
-                      name="email"
+                      name="correoElectronico"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Correo electrónico</FormLabel>
@@ -217,7 +195,7 @@ export default function ReservePage() {
 
                   <FormField
                     control={form.control}
-                    name="phone"
+                    name="telefono"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Número celular (10 dígitos)</FormLabel>
@@ -234,7 +212,7 @@ export default function ReservePage() {
 
                   <FormField
                     control={form.control}
-                    name="eventId"
+                    name="eventoId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Evento</FormLabel>
@@ -242,17 +220,18 @@ export default function ReservePage() {
                           value={field.value}
                           onValueChange={(val) => {
                             field.onChange(val);
-                            form.setValue("zoneId", "");
+                            form.setValue("zonaEventoId", "");
+                            loadZonesForEvent(Number(val));
                           }}
                         >
                           <FormControl>
                             <SelectTrigger data-testid="select-event">
-                              <SelectValue placeholder="Selecciona un evento" />
+                              <SelectValue placeholder={eventsLoading ? "Cargando eventos..." : "Selecciona un evento"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {events.map((evt) => (
-                              <SelectItem key={evt.id} value={evt.id}>{evt.name}</SelectItem>
+                            {apiEvents.map((evt) => (
+                              <SelectItem key={evt.id} value={String(evt.id)}>{evt.nombre || `Evento #${evt.id}`}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -261,23 +240,23 @@ export default function ReservePage() {
                     )}
                   />
 
-                  {selectedEvent && (
+                  {selectedEventId && (
                     <FormField
                       control={form.control}
-                      name="zoneId"
+                      name="zonaEventoId"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Zona</FormLabel>
                           <Select value={field.value} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger data-testid="select-zone">
-                                <SelectValue placeholder="Selecciona una zona" />
+                                <SelectValue placeholder={zonesLoading ? "Cargando zonas..." : "Selecciona una zona"} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {availableZones.map((z) => (
-                                <SelectItem key={z.id} value={z.id}>
-                                  {z.name} - ${z.price.toLocaleString("es-MX")} ({z.capacity - z.sold} disponibles)
+                              {apiZones.map((z) => (
+                                <SelectItem key={z.id} value={String(z.id)}>
+                                  {z.nombre || `Zona #${z.id}`} - ${(z.precio || 0).toLocaleString("es-MX")}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -290,7 +269,7 @@ export default function ReservePage() {
 
                   <FormField
                     control={form.control}
-                    name="quantity"
+                    name="cantidadBoletos"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Cantidad de boletos (máx. 8 por evento)</FormLabel>
@@ -313,9 +292,13 @@ export default function ReservePage() {
                     )}
                   />
 
-                  <Button type="submit" className="w-full" data-testid="button-reserve">
-                    <Ticket className="w-4 h-4 mr-2" />
-                    Apartar Boletos
+                  <Button type="submit" className="w-full" disabled={submitting} data-testid="button-reserve">
+                    {submitting ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Ticket className="w-4 h-4 mr-2" />
+                    )}
+                    {submitting ? "Apartando..." : "Apartar Boletos"}
                   </Button>
                 </form>
               </Form>
@@ -327,34 +310,41 @@ export default function ReservePage() {
         <div className="space-y-4">
           {selectedEvent && (
             <Card data-testid="card-event-preview">
-              <div className="aspect-video overflow-hidden rounded-t-md">
-                <img src={selectedEvent.image} alt={selectedEvent.name} className="w-full h-full object-cover" />
-              </div>
+              {selectedEvent.bannerUrl && (
+                <div className="aspect-video overflow-hidden rounded-t-md">
+                  <img src={selectedEvent.bannerUrl} alt={selectedEvent.nombre || ""} className="w-full h-full object-cover" />
+                </div>
+              )}
               <CardContent className="p-4 space-y-3">
-                <h3 className="font-semibold">{selectedEvent.name}</h3>
+                <h3 className="font-semibold">{selectedEvent.nombre}</h3>
                 <div className="space-y-1.5 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5 shrink-0" />
-                    {new Date(selectedEvent.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })} - {new Date(selectedEvent.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 shrink-0" />
-                    {selectedEvent.location}
-                  </div>
+                  {selectedEvent.fechaInicio && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 shrink-0" />
+                      {new Date(selectedEvent.fechaInicio).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
+                      {selectedEvent.fechaFin && ` - ${new Date(selectedEvent.fechaFin).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}`}
+                    </div>
+                  )}
+                  {selectedEvent.ubicacion && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 shrink-0" />
+                      {selectedEvent.ubicacion}
+                    </div>
+                  )}
                 </div>
                 {selectedZone && (
                   <div className="p-3 rounded-md bg-accent/50 space-y-2">
                     <div className="flex items-center justify-between gap-3 flex-wrap text-sm">
                       <span className="text-muted-foreground">Zona:</span>
-                      <span className="font-medium">{selectedZone.name}</span>
+                      <span className="font-medium">{selectedZone.nombre}</span>
                     </div>
                     <div className="flex items-center justify-between gap-3 flex-wrap text-sm">
                       <span className="text-muted-foreground">Precio unitario:</span>
-                      <span className="font-medium">${selectedZone.price.toLocaleString("es-MX")}</span>
+                      <span className="font-medium">${(selectedZone.precio || 0).toLocaleString("es-MX")}</span>
                     </div>
                     <div className="flex items-center justify-between gap-3 flex-wrap text-sm">
                       <span className="text-muted-foreground">Cantidad:</span>
-                      <span className="font-medium">{form.watch("quantity") || 0}</span>
+                      <span className="font-medium">{form.watch("cantidadBoletos") || 0}</span>
                     </div>
                     <div className="border-t border-border pt-2 flex items-center justify-between gap-3 flex-wrap">
                       <span className="font-medium">Subtotal:</span>
@@ -379,48 +369,6 @@ export default function ReservePage() {
               </div>
             </CardContent>
           </Card>
-
-          {lastReservation && (
-            <Card className="border-primary/30 bg-primary/5" data-testid="card-reservation-confirmation">
-              <CardContent className="p-5 space-y-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                  <h3 className="font-semibold text-lg">Reservación Creada</h3>
-                </div>
-                <div className="flex items-center gap-3 p-4 rounded-md bg-background border border-border">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Código de reserva</p>
-                    <p className="text-2xl font-mono font-bold tracking-wider mt-1" data-testid="text-reservation-code">{lastReservation.code}</p>
-                  </div>
-                  <Button size="icon" variant="outline" onClick={() => copyCode(lastReservation.code)} data-testid="button-copy-code">
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Evento</p>
-                    <p className="font-medium">{events.find((e) => e.id === lastReservation.eventId)?.name}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Boletos</p>
-                    <p className="font-medium">{lastReservation.quantity}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Estado</p>
-                    <Badge variant="outline">Apartado</Badge>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground">Expira en</p>
-                    <p className="font-medium flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5" />
-                      48 horas
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">Tienes 48 horas para confirmar el pago antes de que la reservación expire automáticamente.</p>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
 
