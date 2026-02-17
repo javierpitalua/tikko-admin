@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import {
   Ticket, User, Mail, Phone, Calendar, MapPin, AlertCircle,
-  Loader2,
+  Loader2, CheckCircle2, Clock,
 } from "lucide-react";
 import { ReservacionesService } from "../../api/services/ReservacionesService";
 import { EventosService } from "../../api/services/EventosService";
@@ -43,6 +43,14 @@ export default function ReservePage() {
   const [apiZones, setApiZones] = useState<ZonasEventoListItem[]>([]);
   const [zonesLoading, setZonesLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [lastReservation, setLastReservation] = useState<{
+    folio: string;
+    nombre: string;
+    evento: string;
+    zona: string;
+    cantidadBoletos: number;
+    subtotal: number;
+  } | null>(null);
 
   useEffect(() => {
     loadApiReservations();
@@ -132,8 +140,11 @@ export default function ReservePage() {
       const zone = apiZones.find((z) => String(z.id) === data.zonaEventoId);
       const precioUnitario = zone?.precio || 0;
 
+      const folio = generateFolio();
+      const evt = apiEvents.find((e) => String(e.id) === data.eventoId);
+
       await ReservacionesService.postApiV1ReservacionesCreate({
-        folio: generateFolio(),
+        folio,
         nombre: data.nombre,
         correoElectronico: data.correoElectronico,
         telefono: data.telefono,
@@ -145,6 +156,15 @@ export default function ReservePage() {
         subtotal: precioUnitario * data.cantidadBoletos,
         fechaReservacion: now.toISOString(),
         fechaExpiracion: expiration.toISOString(),
+      });
+
+      setLastReservation({
+        folio,
+        nombre: data.nombre,
+        evento: evt?.nombre || "",
+        zona: zone?.nombre || "",
+        cantidadBoletos: data.cantidadBoletos,
+        subtotal: precioUnitario * data.cantidadBoletos,
       });
 
       toast({ title: "Boletos apartados con éxito" });
@@ -399,6 +419,51 @@ export default function ReservePage() {
               </div>
             </CardContent>
           </Card>
+
+          {lastReservation && (
+            <Card className="border-primary/30" data-testid="card-reservation-confirmation">
+              <CardContent className="p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                  <h3 className="font-semibold text-lg">Reservación Creada</h3>
+                </div>
+                <div className="p-3 rounded-md bg-accent/50">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Folio</p>
+                  <p className="text-xl font-mono font-bold tracking-wider mt-1" data-testid="text-reservation-folio">{lastReservation.folio}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Nombre</p>
+                    <p className="font-medium">{lastReservation.nombre}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Evento</p>
+                    <p className="font-medium">{lastReservation.evento}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Zona</p>
+                    <p className="font-medium">{lastReservation.zona}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Boletos</p>
+                    <p className="font-medium">{lastReservation.cantidadBoletos}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Subtotal</p>
+                    <p className="font-medium">${lastReservation.subtotal.toLocaleString("es-MX")}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground">Estado</p>
+                    <Badge variant="outline">Apartado</Badge>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Tienes 48 horas para confirmar el pago.</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
