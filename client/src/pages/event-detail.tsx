@@ -4,11 +4,13 @@ import { getEvents, saveEvents, generateId } from "@/lib/store";
 import { EventosService } from "../../api/services/EventosService";
 import { ActividadesEventoService } from "../../api/services/ActividadesEventoService";
 import { ZonasEventoService } from "../../api/services/ZonasEventoService";
+import { ProductosAdicionalEventoService } from "../../api/services/ProductosAdicionalEventoService";
 import { TiposDeCategoriaEventoService } from "../../api/services/TiposDeCategoriaEventoService";
 import { UbicacionesService } from "../../api/services/UbicacionesService";
 import type { EventosListItem } from "../../api/models/EventosListItem";
 import type { ActividadesEventoListItem } from "../../api/models/ActividadesEventoListItem";
 import type { ZonasEventoListItem } from "../../api/models/ZonasEventoListItem";
+import type { ProductosAdicionalEventoListItem } from "../../api/models/ProductosAdicionalEventoListItem";
 import type { EditEventoRequest } from "../../api/models/EditEventoRequest";
 import type { Event, Zone, Activity, Coupon, Product, EventStatus } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,6 +110,15 @@ export default function EventDetailPage() {
     }));
   }
 
+  function mapApiProductsToLocal(items: ProductosAdicionalEventoListItem[]): Product[] {
+    return items.map((item) => ({
+      id: String(item.id),
+      name: item.nombre || "",
+      price: item.esGratuito ? 0 : (item.precio || 0),
+      available: item.disponible ?? true,
+    }));
+  }
+
   function mapApiEventToLocal(item: EventosListItem): Event {
     const statusRaw = (item.estadoDeEvento || "").toLowerCase();
     let status: EventStatus = "borrador";
@@ -149,8 +160,9 @@ export default function EventDetailPage() {
       UbicacionesService.getApiV1UbicacionesList().catch(() => ({ items: [] })),
       ActividadesEventoService.getApiV1ActividadesEventoList(numericId).catch(() => ({ items: [] })),
       ZonasEventoService.getApiV1ZonasEventoList(numericId).catch(() => ({ items: [] })),
+      ProductosAdicionalEventoService.getApiV1ProductosAdicionalEventoList(numericId).catch(() => ({ items: [] })),
     ])
-      .then(([eventRes, catRes, locRes, actRes, zonRes]) => {
+      .then(([eventRes, catRes, locRes, actRes, zonRes, prodRes]) => {
         const items = eventRes.items || [];
         if (items.length > 0) {
           const raw = items[0];
@@ -158,8 +170,10 @@ export default function EventDetailPage() {
           const found = mapApiEventToLocal(raw);
           const activities = mapApiActivitiesToLocal((actRes as any).items || []);
           const zones = mapApiZonesToLocal((zonRes as any).items || []);
+          const products = mapApiProductsToLocal((prodRes as any).items || []);
           found.activities = activities;
           found.zones = zones;
+          found.products = products;
           setEvent(found);
           setDraft({
             name: found.name,
@@ -481,6 +495,15 @@ export default function EventDetailPage() {
         .catch(() => {
           setConfirmDelete({ type, id, name });
         });
+    } else if (type === "product") {
+      ProductosAdicionalEventoService.getApiV1ProductosAdicionalEventoGetDescription(Number(id))
+        .then((res) => {
+          const description = res?.text || res?.value || name;
+          setConfirmDelete({ type, id, name: String(description) });
+        })
+        .catch(() => {
+          setConfirmDelete({ type, id, name });
+        });
     } else {
       setConfirmDelete({ type, id, name });
     }
@@ -521,9 +544,24 @@ export default function EventDetailPage() {
           setConfirmDelete(null);
           toast({ title: "Error al eliminar la zona", variant: "destructive" });
         });
+    } else if (type === "product") {
+      ProductosAdicionalEventoService.postApiV1ProductosAdicionalEventoDelete({ id: Number(id) })
+        .then(() => {
+          ProductosAdicionalEventoService.getApiV1ProductosAdicionalEventoList(Number(event.id))
+            .then((res) => {
+              const products = mapApiProductsToLocal(res.items || []);
+              setEvent((prev) => prev ? { ...prev, products } : prev);
+            });
+          setConfirmDelete(null);
+          toast({ title: "Producto eliminado" });
+        })
+        .catch((err) => {
+          console.error("Error deleting product:", err);
+          setConfirmDelete(null);
+          toast({ title: "Error al eliminar el producto", variant: "destructive" });
+        });
     } else {
       if (type === "coupon") deleteCoupon(id);
-      else if (type === "product") deleteProduct(id);
       setConfirmDelete(null);
     }
   }
@@ -654,32 +692,71 @@ export default function EventDetailPage() {
   }
 
   function saveProduct() {
-    if (!event || !productForm.name || !productForm.price) return;
-    const updated = { ...event };
+    if (!event || !productForm.name) return;
+
+    const refreshProducts = () => {
+      ProductosAdicionalEventoService.getApiV1ProductosAdicionalEventoList(Number(event.id))
+        .then((res) => {
+          const products = mapApiProductsToLocal(res.items || []);
+          setEvent((prev) => prev ? { ...prev, products } : prev);
+        });
+    };
+
+    const isGratuito = productForm.price === "0";
+
     if (editingProduct) {
-      updated.products = updated.products.map((p) =>
-        p.id === editingProduct.id
-          ? { ...p, name: productForm.name, price: Number(productForm.price), available: productForm.available }
-          : p
-      );
+      ProductosAdicionalEventoService.postApiV1ProductosAdicionalEventoEdit({
+        id: Number(editingProduct.id),
+        eventoId: Number(event.id),
+        nombre: productForm.name,
+        esGratuito: isGratuito,
+        precio: isGratuito ? 0 : Number(productForm.price),
+        disponible: productForm.available,
+      })
+        .then(() => {
+          refreshProducts();
+          setProductDialog(false);
+          toast({ title: "Producto actualizado" });
+        })
+        .catch((err) => {
+          console.error("Error updating product:", err);
+          toast({ title: "Error al actualizar el producto", variant: "destructive" });
+        });
     } else {
-      updated.products = [...(updated.products || []), {
-        id: generateId(),
-        name: productForm.name,
-        price: Number(productForm.price),
-        available: productForm.available,
-      }];
+      ProductosAdicionalEventoService.postApiV1ProductosAdicionalEventoCreate({
+        eventoId: Number(event.id),
+        nombre: productForm.name,
+        esGratuito: isGratuito,
+        precio: isGratuito ? 0 : Number(productForm.price),
+        disponible: productForm.available,
+      })
+        .then(() => {
+          refreshProducts();
+          setProductDialog(false);
+          toast({ title: "Producto agregado" });
+        })
+        .catch((err) => {
+          console.error("Error creating product:", err);
+          toast({ title: "Error al crear el producto", variant: "destructive" });
+        });
     }
-    persistEvent(updated);
-    setProductDialog(false);
-    toast({ title: editingProduct ? "Producto actualizado" : "Producto agregado" });
   }
 
   function deleteProduct(productId: string) {
     if (!event) return;
-    const updated = { ...event, products: event.products.filter((p) => p.id !== productId) };
-    persistEvent(updated);
-    toast({ title: "Producto eliminado" });
+    ProductosAdicionalEventoService.postApiV1ProductosAdicionalEventoDelete({ id: Number(productId) })
+      .then(() => {
+        ProductosAdicionalEventoService.getApiV1ProductosAdicionalEventoList(Number(event.id))
+          .then((res) => {
+            const products = mapApiProductsToLocal(res.items || []);
+            setEvent((prev) => prev ? { ...prev, products } : prev);
+          });
+        toast({ title: "Producto eliminado" });
+      })
+      .catch((err) => {
+        console.error("Error deleting product:", err);
+        toast({ title: "Error al eliminar el producto", variant: "destructive" });
+      });
   }
 
   const totalSold = event.zones.reduce((s, z) => s + z.sold, 0);
