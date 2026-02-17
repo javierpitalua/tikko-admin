@@ -7,6 +7,7 @@ import { EventosService } from "../../api/services/EventosService";
 import { TiposDeCategoriaEventoService } from "../../api/services/TiposDeCategoriaEventoService";
 import { UbicacionesService } from "../../api/services/UbicacionesService";
 import type { SelectListItem } from "../../api/models/SelectListItem";
+import type { UbicacionesListItem } from "../../api/models/UbicacionesListItem";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ export default function EventNewPage() {
   const [bannerImage, setBannerImage] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<SelectListItem[]>([]);
-  const [locations, setLocations] = useState<SelectListItem[]>([]);
+  const [locations, setLocations] = useState<UbicacionesListItem[]>([]);
   const [loadingCatalogs, setLoadingCatalogs] = useState(true);
 
   const form = useForm<NewEventInput>({
@@ -50,7 +51,7 @@ export default function EventNewPage() {
   useEffect(() => {
     Promise.all([
       TiposDeCategoriaEventoService.getApiV1TiposDeCategoriaEventoLoadSelectList(),
-      UbicacionesService.getApiV1UbicacionesLoadSelectList(),
+      UbicacionesService.getApiV1UbicacionesList(),
     ])
       .then(([catRes, locRes]) => {
         setCategories(catRes.items || []);
@@ -115,7 +116,7 @@ export default function EventNewPage() {
   }
 
   const selectedCatName = categories.find((c) => c.value === watchedValues.tipoDeCategoriaEventoId)?.text || "";
-  const selectedLocName = locations.find((l) => l.value === watchedValues.ubicacionId)?.text || "";
+  const selectedLocName = locations.find((l) => String(l.id) === watchedValues.ubicacionId)?.nombre || "";
 
   const previewImage = bannerImage || placeholderBanner;
   const hasAnyData = watchedValues.name || watchedValues.startDate || watchedValues.ubicacionId || watchedValues.tipoDeCategoriaEventoId || watchedValues.description;
@@ -229,7 +230,7 @@ export default function EventNewPage() {
                           </FormControl>
                           <SelectContent>
                             {locations.map((loc) => (
-                              <SelectItem key={loc.value} value={loc.value || ""}>{loc.text}</SelectItem>
+                              <SelectItem key={loc.id} value={String(loc.id || "")}>{loc.nombre}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
