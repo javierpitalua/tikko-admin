@@ -108,6 +108,15 @@ export default function ReservePage() {
 
   const subtotal = selectedZone ? (selectedZone.precio || 0) * (form.watch("cantidadBoletos") || 0) : 0;
 
+  function generateFolio(): string {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "RES-";
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
   async function onSubmit(data: ReserveFormInput) {
     setSubmitting(true);
     try {
@@ -124,6 +133,7 @@ export default function ReservePage() {
       const precioUnitario = zone?.precio || 0;
 
       await ReservacionesService.postApiV1ReservacionesCreate({
+        folio: generateFolio(),
         nombre: data.nombre,
         correoElectronico: data.correoElectronico,
         telefono: data.telefono,
@@ -143,7 +153,18 @@ export default function ReservePage() {
       await loadApiReservations();
     } catch (err: any) {
       console.error("Error creating reservation:", err);
-      const detail = err?.body?.detail || err?.body?.title || err?.message || "Intenta de nuevo";
+      let detail = "Intenta de nuevo";
+      if (err?.body?.ValidationSummary?.ErrorDetails?.length) {
+        detail = err.body.ValidationSummary.ErrorDetails
+          .map((d: any) => `${d.PropertyName}: ${d.Errors?.map((e: any) => e.Description).join(", ")}`)
+          .join("; ");
+      } else if (err?.body?.ValidationSummary?.ErrorMessage) {
+        detail = err.body.ValidationSummary.ErrorMessage;
+      } else if (err?.body?.detail || err?.body?.title) {
+        detail = err.body.detail || err.body.title;
+      } else if (err?.message) {
+        detail = err.message;
+      }
       toast({ title: "Error al crear la reservación", description: detail, variant: "destructive" });
     } finally {
       setSubmitting(false);
