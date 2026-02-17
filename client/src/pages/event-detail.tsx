@@ -61,6 +61,8 @@ export default function EventDetailPage() {
   const [productDialog, setProductDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [previewDialog, setPreviewDialog] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewData, setPreviewData] = useState<{ event: any; activities: Activity[]; zones: Zone[]; products: Product[] } | null>(null);
   const [activeTab, setActiveTab] = useState("basic");
 
   const [zoneForm, setZoneForm] = useState({ name: "", capacity: "", price: "" });
@@ -816,6 +818,33 @@ export default function EventDetailPage() {
     }
   }
 
+  function openPreview() {
+    if (!event) return;
+    const numericId = Number(event.id);
+    setPreviewLoading(true);
+    Promise.all([
+      EventosService.getApiV1EventosList(undefined, undefined, undefined, undefined, numericId).catch(() => ({ items: [] })),
+      ActividadesEventoService.getApiV1ActividadesEventoList(numericId).catch(() => ({ items: [] })),
+      ZonasEventoService.getApiV1ZonasEventoList(numericId).catch(() => ({ items: [] })),
+      ProductosAdicionalEventoService.getApiV1ProductosAdicionalEventoList(numericId).catch(() => ({ items: [] })),
+    ])
+      .then(([eventRes, actRes, zonRes, prodRes]) => {
+        const items = (eventRes as any).items || [];
+        const raw = items.length > 0 ? items[0] : null;
+        const previewEvent = raw ? mapApiEventToLocal(raw) : event;
+        const activities = mapApiActivitiesToLocal((actRes as any).items || []);
+        const zones = mapApiZonesToLocal((zonRes as any).items || []);
+        const products = mapApiProductsToLocal((prodRes as any).items || []);
+        setPreviewData({ event: previewEvent, activities, zones, products });
+        setPreviewLoading(false);
+        setPreviewDialog(true);
+      })
+      .catch(() => {
+        setPreviewLoading(false);
+        toast({ title: "Error al cargar la vista previa", variant: "destructive" });
+      });
+  }
+
   function openProductDialog(product?: Product) {
     if (product) {
       setEditingProduct(product);
@@ -927,9 +956,9 @@ export default function EventDetailPage() {
             {saving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
             {saving ? "Guardando..." : "Guardar"}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setPreviewDialog(true)} className="rounded-xl" data-testid="button-preview-event">
-            <Eye className="w-3.5 h-3.5 mr-1.5" />
-            Vista previa
+          <Button variant="outline" size="sm" onClick={openPreview} disabled={previewLoading} className="rounded-xl" data-testid="button-preview-event">
+            {previewLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Eye className="w-3.5 h-3.5 mr-1.5" />}
+            {previewLoading ? "Cargando..." : "Vista previa"}
           </Button>
           <Button
             variant="outline"
@@ -1699,92 +1728,98 @@ export default function EventDetailPage() {
             <DialogTitle>Vista previa del evento</DialogTitle>
             <DialogDescription>Así verán los clientes tu evento</DialogDescription>
           </DialogHeader>
-          <div className="space-y-6">
-            <div className="relative rounded-xl overflow-hidden">
-              <div className="aspect-[16/9]">
-                <img src={event.image} alt={event.name} className="w-full h-full object-cover" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <Badge variant="secondary" className="mb-2 bg-white/15 text-white border-0 backdrop-blur-sm">{event.category}</Badge>
-                <h2 className="text-2xl font-bold text-white">{event.name}</h2>
-                <div className="flex items-center gap-4 mt-2 flex-wrap">
-                  <span className="flex items-center gap-1.5 text-sm text-white/80">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(event.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "long" })} - {new Date(event.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}
-                  </span>
-                  <span className="flex items-center gap-1.5 text-sm text-white/80">
-                    <MapPin className="w-4 h-4" />
-                    {event.location}
-                  </span>
+          {previewData ? (
+            <div className="space-y-6">
+              <div className="relative rounded-xl overflow-hidden">
+                <div className="aspect-[16/9]">
+                  <img src={previewData.event.image} alt={previewData.event.name} className="w-full h-full object-cover" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <Badge variant="secondary" className="mb-2 bg-white/15 text-white border-0 backdrop-blur-sm">{previewData.event.category}</Badge>
+                  <h2 className="text-2xl font-bold text-white">{previewData.event.name}</h2>
+                  <div className="flex items-center gap-4 mt-2 flex-wrap">
+                    <span className="flex items-center gap-1.5 text-sm text-white/80">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(previewData.event.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "long" })} - {new Date(previewData.event.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-sm text-white/80">
+                      <MapPin className="w-4 h-4" />
+                      {previewData.event.location}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {event.description && (
-              <p className="text-muted-foreground leading-relaxed">{event.description}</p>
-            )}
+              {previewData.event.description && (
+                <p className="text-muted-foreground leading-relaxed">{previewData.event.description}</p>
+              )}
 
-            {event.activities.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-base font-semibold">Actividades</h3>
-                <div className="space-y-2">
-                  {event.activities.map((act) => (
-                    <div key={act.id} className="flex items-center gap-3 p-3 rounded-xl bg-accent/30">
-                      <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <div>
-                        <p className="font-medium text-sm">{act.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {act.startDate ? `${new Date(act.startDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ${act.startTime} hrs` : act.startTime}{" - "}{act.endDate && act.endDate !== act.startDate ? `${new Date(act.endDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ` : ""}{act.endTime} hrs | {act.description}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {event.zones.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-base font-semibold">Zonas y Precios</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {event.zones.map((zone) => {
-                    const remaining = zone.capacity - zone.sold;
-                    return (
-                      <Card key={zone.id}>
-                        <CardContent className="p-4 space-y-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="font-semibold">{zone.name}</p>
-                            <p className="text-lg font-bold tabular-nums">${zone.price.toLocaleString("es-MX")}</p>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {remaining > 0 ? `${remaining.toLocaleString()} lugares disponibles` : "Agotado"}
+              {previewData.activities.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold">Actividades</h3>
+                  <div className="space-y-2">
+                    {previewData.activities.map((act) => (
+                      <div key={act.id} className="flex items-center gap-3 p-3 rounded-xl bg-accent/30">
+                        <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <div>
+                          <p className="font-medium text-sm">{act.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {act.startDate ? `${new Date(act.startDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ${act.startTime} hrs` : act.startTime}{" - "}{act.endDate && act.endDate !== act.startDate ? `${new Date(act.endDate + "T00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ` : ""}{act.endTime} hrs | {act.description}
                           </p>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {(event.products || []).length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-base font-semibold">Productos</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {(event.products || []).filter(p => p.available).map((product) => (
-                    <div key={product.id} className="flex items-center gap-3 p-3 rounded-xl bg-accent/30">
-                      <Package className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{product.name}</p>
+                        </div>
                       </div>
-                      <p className="font-bold text-sm tabular-nums">{product.price === 0 ? "Gratuito" : `$${product.price.toLocaleString("es-MX")}`}</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+
+              {previewData.zones.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold">Zonas y Precios</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {previewData.zones.map((zone) => {
+                      const remaining = zone.capacity - zone.sold;
+                      return (
+                        <Card key={zone.id}>
+                          <CardContent className="p-4 space-y-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-semibold">{zone.name}</p>
+                              <p className="text-lg font-bold tabular-nums">${zone.price.toLocaleString("es-MX")}</p>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {remaining > 0 ? `${remaining.toLocaleString()} lugares disponibles` : "Agotado"}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {previewData.products.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold">Productos</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {previewData.products.filter(p => p.available).map((product) => (
+                      <div key={product.id} className="flex items-center gap-3 p-3 rounded-xl bg-accent/30">
+                        <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm">{product.name}</p>
+                        </div>
+                        <p className="font-bold text-sm tabular-nums">{product.price === 0 ? "Gratuito" : `$${product.price.toLocaleString("es-MX")}`}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviewDialog(false)} className="rounded-xl">Cerrar</Button>
           </DialogFooter>
