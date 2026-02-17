@@ -229,8 +229,8 @@ export default function EventNewPage() {
                             <SelectTrigger className="h-11 rounded-xl" data-testid="select-event-location"><SelectValue placeholder="Selecciona" /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {locations.map((loc) => (
-                              <SelectItem key={loc.id} value={String(loc.id || "")}>{loc.nombre}</SelectItem>
+                            {locations.filter((loc) => loc.id != null).map((loc) => (
+                              <SelectItem key={loc.id} value={String(loc.id)}>{loc.nombre}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -245,8 +245,8 @@ export default function EventNewPage() {
                             <SelectTrigger className="h-11 rounded-xl" data-testid="select-event-category"><SelectValue placeholder="Selecciona" /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories.map((cat) => (
-                              <SelectItem key={cat.id} value={String(cat.id || "")}>{cat.nombre}</SelectItem>
+                            {categories.filter((cat) => cat.id != null).map((cat) => (
+                              <SelectItem key={cat.id} value={String(cat.id)}>{cat.nombre}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { getEvents, saveEvents, generateId } from "@/lib/store";
+import { EventosService } from "../../api/services/EventosService";
+import type { EventosListItem } from "../../api/models/EventosListItem";
 import type { Event, Zone, Activity, Coupon, Product, EventStatus } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +19,7 @@ import {
   ArrowLeft, MapPin, Calendar, Edit2, Plus, Trash2,
   Ticket, Clock, Tag, Save, Users, Image as ImageIcon,
   Upload, X, FileText, DollarSign, ShoppingBag, Building, Package,
-  Send, Eye,
+  Send, Eye, Loader2,
 } from "lucide-react";
 
 const CATEGORIES = ["Música", "Tecnología", "Deportes", "Gastronomía", "Cultura", "Teatro", "Arte", "Otro"];
@@ -29,6 +31,8 @@ export default function EventDetailPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ name: "", startDate: "", endDate: "", location: "", category: "", description: "", image: "" });
 
@@ -50,27 +54,82 @@ export default function EventDetailPage() {
   const [productForm, setProductForm] = useState({ name: "", price: "", available: true });
   const [confirmDelete, setConfirmDelete] = useState<{ type: string; id: string; name: string } | null>(null);
 
+  function mapApiEventToLocal(item: EventosListItem): Event {
+    const statusRaw = (item.estadoDeEvento || "").toLowerCase();
+    let status: EventStatus = "borrador";
+    if (statusRaw.includes("publicado") || statusRaw.includes("activo")) status = "publicado";
+    else if (statusRaw.includes("revisión") || statusRaw.includes("revision") || statusRaw.includes("pendiente")) status = "en_revision";
+
+    return {
+      id: String(item.id),
+      name: item.nombre || "",
+      startDate: item.fechaInicio ? item.fechaInicio.split("T")[0] : "",
+      endDate: item.fechaFin ? item.fechaFin.split("T")[0] : "",
+      location: item.ubicacion || "",
+      description: item.descripcion || "",
+      image: item.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&h=400&fit=crop",
+      category: item.tipoDeCategoriaEvento || "",
+      status,
+      zones: [],
+      activities: [],
+      coupons: [],
+      products: [],
+      adminId: item.creadoPor || "",
+    };
+  }
+
   useEffect(() => {
-    const events = getEvents();
-    const found = events.find((e) => e.id === params.id);
-    if (found) {
-      setEvent(found);
-      setDraft({
-        name: found.name,
-        startDate: found.startDate,
-        endDate: found.endDate,
-        location: found.location,
-        category: found.category,
-        description: found.description,
-        image: found.image,
-      });
+    const numericId = Number(params.id);
+    if (isNaN(numericId)) {
+      setNotFound(true);
+      setLoading(false);
+      return;
     }
+
+    setLoading(true);
+    setNotFound(false);
+    EventosService.getApiV1EventosList(undefined, undefined, undefined, undefined, numericId)
+      .then((res) => {
+        const items = res.items || [];
+        if (items.length > 0) {
+          const found = mapApiEventToLocal(items[0]);
+          setEvent(found);
+          setDraft({
+            name: found.name,
+            startDate: found.startDate,
+            endDate: found.endDate,
+            location: found.location,
+            category: found.category,
+            description: found.description,
+            image: found.image,
+          });
+        } else {
+          setNotFound(true);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching event:", err);
+        setNotFound(true);
+      })
+      .finally(() => setLoading(false));
   }, [params.id]);
 
-  if (!event) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground">Evento no encontrado</p>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (notFound || !event) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <p className="text-muted-foreground text-lg">Evento no encontrado</p>
+        <Button variant="outline" className="rounded-xl" onClick={() => navigate("/events")} data-testid="button-back-to-events">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Volver a eventos
+        </Button>
       </div>
     );
   }
