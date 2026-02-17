@@ -1073,9 +1073,7 @@ export default function EventDetailPage() {
                         <th className="text-left py-3.5 px-5 text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Zona</th>
                         <th className="text-right py-3.5 px-5 text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Precio</th>
                         <th className="text-right py-3.5 px-5 text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Capacidad</th>
-                        <th className="text-right py-3.5 px-5 text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Vendidos</th>
                         <th className="text-right py-3.5 px-5 text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Ingreso</th>
-                        <th className="text-right py-3.5 px-5 text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1084,21 +1082,13 @@ export default function EventDetailPage() {
                           <td className="py-3.5 px-5 font-medium">{zone.name}</td>
                           <td className="py-3.5 px-5 text-right tabular-nums">${zone.price.toLocaleString("es-MX")}</td>
                           <td className="py-3.5 px-5 text-right tabular-nums">{zone.capacity.toLocaleString()}</td>
-                          <td className="py-3.5 px-5 text-right tabular-nums">{zone.sold}</td>
-                          <td className="py-3.5 px-5 text-right font-medium tabular-nums">${(zone.price * zone.sold).toLocaleString("es-MX")}</td>
-                          <td className="py-3.5 px-5 text-right">
-                            <Button size="icon" variant="ghost" onClick={() => openZoneDialog(zone)} data-testid={`button-edit-price-${zone.id}`}>
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                          </td>
+                          <td className="py-3.5 px-5 text-right font-medium tabular-nums">${(zone.price * zone.capacity).toLocaleString("es-MX")}</td>
                         </tr>
                       ))}
                       <tr className="bg-accent/20">
                         <td className="py-3.5 px-5 font-bold" colSpan={2}>Total</td>
                         <td className="py-3.5 px-5 text-right font-bold tabular-nums">{totalCap.toLocaleString()}</td>
-                        <td className="py-3.5 px-5 text-right font-bold tabular-nums">{totalSold}</td>
-                        <td className="py-3.5 px-5 text-right font-bold tabular-nums">${totalRevenue.toLocaleString("es-MX")}</td>
-                        <td />
+                        <td className="py-3.5 px-5 text-right font-bold tabular-nums">${event.zones.reduce((sum, z) => sum + z.price * z.capacity, 0).toLocaleString("es-MX")}</td>
                       </tr>
                     </tbody>
                   </table>
