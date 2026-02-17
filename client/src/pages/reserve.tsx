@@ -442,17 +442,27 @@ export default function ReservePage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm" data-testid="table-reservations">
+              <table className="w-full text-sm table-fixed" data-testid="table-reservations">
+                <colgroup>
+                  <col className="w-[12%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[10%]" />
+                </colgroup>
                 <thead>
                   <tr className="border-b border-border bg-accent/30">
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Folio</th>
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Nombre</th>
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Evento</th>
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Zona</th>
-                    <th className="text-center py-3 px-3 font-medium text-muted-foreground">Boletos</th>
-                    <th className="text-right py-3 px-3 font-medium text-muted-foreground">Subtotal</th>
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Fecha</th>
-                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Estado</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Folio</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Nombre</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Evento</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Zona</th>
+                    <th className="text-center py-3 px-4 font-medium text-muted-foreground">Boletos</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Fecha</th>
+                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Subtotal</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -465,34 +475,34 @@ export default function ReservePage() {
                       : "outline";
                     return (
                       <tr key={r.id} className="border-b border-border last:border-0" data-testid={`row-reservation-${r.id}`}>
-                        <td className="py-3 px-3">
+                        <td className="py-3 px-4">
                           <code className="font-mono text-xs font-semibold" data-testid={`text-folio-${r.id}`}>{r.folio || `#${r.id}`}</code>
                         </td>
-                        <td className="py-3 px-3">
-                          <div>
-                            <p className="font-medium">{r.nombre || "—"}</p>
-                            <p className="text-xs text-muted-foreground">{r.correoElectronico || ""}</p>
+                        <td className="py-3 px-4">
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{r.nombre || "—"}</p>
+                            <p className="text-xs text-muted-foreground truncate">{r.correoElectronico || ""}</p>
                           </div>
                         </td>
-                        <td className="py-3 px-3">
+                        <td className="py-3 px-4">
                           <button
                             type="button"
-                            className="text-left text-primary underline-offset-2 hover:underline cursor-pointer"
+                            className="text-left text-primary underline-offset-2 hover:underline cursor-pointer truncate block max-w-full"
                             onClick={() => navigate("/events")}
                             data-testid={`link-event-${r.id}`}
                           >
                             {r.evento || "—"}
                           </button>
                         </td>
-                        <td className="py-3 px-3">{r.zonaEvento || "—"}</td>
-                        <td className="py-3 px-3 text-center">{r.cantidadBoletos ?? 0}</td>
-                        <td className="py-3 px-3 text-right font-medium">
-                          {r.subtotal != null ? `$${r.subtotal.toLocaleString("es-MX")}` : "—"}
-                        </td>
-                        <td className="py-3 px-3 text-muted-foreground">
+                        <td className="py-3 px-4 truncate">{r.zonaEvento || "—"}</td>
+                        <td className="py-3 px-4 text-center">{r.cantidadBoletos ?? 0}</td>
+                        <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
                           {r.fechaReservacion ? new Date(r.fechaReservacion).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                         </td>
-                        <td className="py-3 px-3">
+                        <td className="py-3 px-4 text-right font-medium whitespace-nowrap">
+                          {r.subtotal != null ? `$${r.subtotal.toLocaleString("es-MX")}` : "—"}
+                        </td>
+                        <td className="py-3 px-4">
                           <Badge variant={badgeVariant} data-testid={`badge-status-${r.id}`}>
                             {r.estadoDeReservacion || "Desconocido"}
                           </Badge>
