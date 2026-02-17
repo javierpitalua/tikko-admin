@@ -403,28 +403,61 @@ export default function EventDetailPage() {
   }
 
   function saveActivity() {
-    if (!event || !activityForm.name || !activityForm.startDate || !activityForm.startTime || !activityForm.endTime) return;
-    const updated = { ...event };
-    if (editingActivity) {
-      updated.activities = updated.activities.map((a) =>
-        a.id === editingActivity.id
-          ? { ...a, name: activityForm.name, startDate: activityForm.startDate, endDate: activityForm.endDate || activityForm.startDate, startTime: activityForm.startTime, endTime: activityForm.endTime, description: activityForm.description }
-          : a
-      );
-    } else {
-      updated.activities = [...updated.activities, {
-        id: generateId(),
-        name: activityForm.name,
-        startDate: activityForm.startDate,
-        endDate: activityForm.endDate || activityForm.startDate,
-        startTime: activityForm.startTime,
-        endTime: activityForm.endTime,
-        description: activityForm.description,
-      }];
+    if (!event || !activityForm.name || !activityForm.startDate || !activityForm.startTime || !activityForm.endTime) {
+      toast({ title: "Completa todos los campos obligatorios", variant: "destructive" });
+      return;
     }
-    persistEvent(updated);
-    setActivityDialog(false);
-    toast({ title: editingActivity ? "Actividad actualizada" : "Actividad agregada" });
+
+    const endDate = activityForm.endDate || activityForm.startDate;
+    const fechaHoraInicio = new Date(`${activityForm.startDate}T${activityForm.startTime}:00`).toISOString();
+    const fechaHoraFin = new Date(`${endDate}T${activityForm.endTime}:00`).toISOString();
+
+    if (editingActivity) {
+      ActividadesEventoService.postApiV1ActividadesEventoEdit({
+        id: Number(editingActivity.id),
+        eventoId: Number(event.id),
+        nombre: activityForm.name,
+        descripcion: activityForm.description,
+        fechaHoraInicio,
+        fechaHoraFin,
+      })
+        .then(() => {
+          const updated = { ...event };
+          updated.activities = updated.activities.map((a) =>
+            a.id === editingActivity.id
+              ? { ...a, name: activityForm.name, startDate: activityForm.startDate, endDate: endDate, startTime: activityForm.startTime, endTime: activityForm.endTime, description: activityForm.description }
+              : a
+          );
+          setEvent(updated);
+          setActivityDialog(false);
+          toast({ title: "Actividad actualizada" });
+        })
+        .catch((err) => {
+          console.error("Error updating activity:", err);
+          toast({ title: "Error al actualizar la actividad", variant: "destructive" });
+        });
+    } else {
+      ActividadesEventoService.postApiV1ActividadesEventoCreate({
+        eventoId: Number(event.id),
+        nombre: activityForm.name,
+        descripcion: activityForm.description,
+        fechaHoraInicio,
+        fechaHoraFin,
+      })
+        .then(() => {
+          ActividadesEventoService.getApiV1ActividadesEventoList(Number(event.id))
+            .then((res) => {
+              const activities = mapApiActivitiesToLocal(res.items || []);
+              setEvent({ ...event, activities });
+            });
+          setActivityDialog(false);
+          toast({ title: "Actividad agregada" });
+        })
+        .catch((err) => {
+          console.error("Error creating activity:", err);
+          toast({ title: "Error al crear la actividad", variant: "destructive" });
+        });
+    }
   }
 
   function deleteActivity(activityId: string) {
