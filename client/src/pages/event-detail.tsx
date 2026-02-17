@@ -50,8 +50,6 @@ export default function EventDetailPage() {
     return role.includes("aprobador") || role.includes("approver") || role.includes("admin");
   })();
 
-  const isReadOnly = event?.status === "en_revision" || event?.status === "publicado";
-
   const [event, setEvent] = useState<Event | null>(null);
   const [apiItem, setApiItem] = useState<EventosListItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,6 +87,8 @@ export default function EventDetailPage() {
   const [priceEditDialog, setPriceEditDialog] = useState(false);
   const [priceEditZone, setPriceEditZone] = useState<Zone | null>(null);
   const [priceEditValue, setPriceEditValue] = useState("");
+
+  const isReadOnly = event?.status === "en_revision" || event?.status === "publicado";
 
   function mapApiActivitiesToLocal(items: ActividadesEventoListItem[]): Activity[] {
     return items.map((item) => {
