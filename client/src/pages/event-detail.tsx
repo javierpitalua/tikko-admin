@@ -6,8 +6,10 @@ import { ActividadesEventoService } from "../../api/services/ActividadesEventoSe
 import { ZonasEventoService } from "../../api/services/ZonasEventoService";
 import { ProductosAdicionalEventoService } from "../../api/services/ProductosAdicionalEventoService";
 import { CuponesZonaEventoService } from "../../api/services/CuponesZonaEventoService";
+import { EstadosDeEventoService } from "../../api/services/EstadosDeEventoService";
 import { TiposDeCategoriaEventoService } from "../../api/services/TiposDeCategoriaEventoService";
 import { UbicacionesService } from "../../api/services/UbicacionesService";
+import type { EstadosDeEventoListItem } from "../../api/models/EstadosDeEventoListItem";
 import type { EventosListItem } from "../../api/models/EventosListItem";
 import type { ActividadesEventoListItem } from "../../api/models/ActividadesEventoListItem";
 import type { ZonasEventoListItem } from "../../api/models/ZonasEventoListItem";
@@ -30,7 +32,7 @@ import {
   ArrowLeft, MapPin, Calendar, Edit2, Plus, Trash2,
   Ticket, Clock, Tag, Save, Users, Image as ImageIcon,
   Upload, X, FileText, DollarSign, ShoppingBag, Building, Package,
-  Send, Eye, Loader2,
+  Send, Eye, Loader2, CheckCircle,
 } from "lucide-react";
 
 const CATEGORIES = ["Música", "Tecnología", "Deportes", "Gastronomía", "Cultura", "Teatro", "Arte", "Otro"];
@@ -50,6 +52,9 @@ export default function EventDetailPage() {
   const [draft, setDraft] = useState({ name: "", startDate: "", endDate: "", ubicacionId: "", tipoDeCategoriaEventoId: "", description: "", image: "" });
   const [categories, setCategories] = useState<Array<{ id?: number; nombre?: string | null }>>([]);
   const [locations, setLocations] = useState<Array<{ id?: number; nombre?: string | null }>>([]);
+  const [eventStatuses, setEventStatuses] = useState<EstadosDeEventoListItem[]>([]);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [approveLoading, setApproveLoading] = useState(false);
 
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -193,8 +198,10 @@ export default function EventDetailPage() {
       ActividadesEventoService.getApiV1ActividadesEventoList(numericId).catch(() => ({ items: [] })),
       ZonasEventoService.getApiV1ZonasEventoList(numericId).catch(() => ({ items: [] })),
       ProductosAdicionalEventoService.getApiV1ProductosAdicionalEventoList(numericId).catch(() => ({ items: [] })),
+      EstadosDeEventoService.getApiV1EstadosDeEventoList().catch(() => ({ items: [] })),
     ])
-      .then(([eventRes, catRes, locRes, actRes, zonRes, prodRes]) => {
+      .then(([eventRes, catRes, locRes, actRes, zonRes, prodRes, statusRes]) => {
+        setEventStatuses((statusRes as any).items || []);
         const items = eventRes.items || [];
         if (items.length > 0) {
           const raw = items[0];
@@ -391,9 +398,23 @@ export default function EventDetailPage() {
     navigate("/events");
   }
 
-  function saveEventDraft() {
+  function findStatusId(keyword: string): number | undefined {
+    const found = eventStatuses.find((s) => {
+      const name = (s.nombre || "").toLowerCase();
+      return name.includes(keyword.toLowerCase());
+    });
+    return found?.id;
+  }
+
+  function changeEventStatus(targetStatusKeyword: string, targetLocalStatus: EventStatus, successMsg: string, setLoading: (v: boolean) => void) {
     if (!event || !apiItem) return;
-    setSaving(true);
+    const statusId = findStatusId(targetStatusKeyword);
+    if (!statusId) {
+      toast({ title: "No se encontró el estado en el catálogo", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
 
     const currentName = editing ? draft.name.trim() : event.name;
     const currentDesc = editing ? draft.description.trim() : event.description;
@@ -412,17 +433,17 @@ export default function EventDetailPage() {
       fechaFin: new Date(currentEndDate + "T23:59:59").toISOString(),
       ubicacionId: currentUbicacionId,
       tipoDeCategoriaEventoId: currentCategoriaId,
-      estadoDeEventoId: apiItem.estadoDeEventoId,
+      estadoDeEventoId: statusId,
     };
 
     EventosService.postApiV1EventosEdit(requestBody)
       .then((result: any) => {
-        setSaving(false);
+        setLoading(false);
         if (result && result.ok === false) {
           const errors = result.validationSummary?.errors;
           const msg = errors && errors.length > 0
             ? errors.map((e: any) => e.description || e.errorMessage || "").filter(Boolean).join(", ")
-            : "Error al guardar el evento";
+            : "Error al cambiar el estado del evento";
           toast({ title: msg, variant: "destructive" });
           return;
         }
@@ -439,6 +460,7 @@ export default function EventDetailPage() {
           category: selectedCategory?.nombre || event.category,
           description: currentDesc,
           image: currentImage,
+          status: targetLocalStatus,
         };
         setEvent(updated);
         setApiItem({
@@ -452,22 +474,28 @@ export default function EventDetailPage() {
           tipoDeCategoriaEventoId: currentCategoriaId,
           ubicacion: selectedLocation?.nombre || null,
           tipoDeCategoriaEvento: selectedCategory?.nombre || null,
+          estadoDeEventoId: statusId,
         });
         if (editing) setEditing(false);
-        toast({ title: "Evento guardado correctamente" });
+        toast({ title: successMsg });
       })
       .catch((err) => {
-        setSaving(false);
-        console.error("Error saving event:", err);
-        toast({ title: "Error al guardar el evento", variant: "destructive" });
+        setLoading(false);
+        console.error("Error changing event status:", err);
+        toast({ title: "Error al cambiar el estado del evento", variant: "destructive" });
       });
   }
 
+  function saveEventDraft() {
+    changeEventStatus("Borrador", "borrador", "Evento guardado como borrador", setSaving);
+  }
+
   function sendToReview() {
-    if (!event) return;
-    const updated: Event = { ...event, status: "en_revision" };
-    persistEvent(updated);
-    toast({ title: "Evento enviado a revisión" });
+    changeEventStatus("Revisión", "en_revision", "Evento enviado a revisión", setReviewLoading);
+  }
+
+  function approveEvent() {
+    changeEventStatus("Publicado", "publicado", "Evento aprobado y publicado", setApproveLoading);
   }
 
   const STATUS_LABELS: Record<EventStatus, string> = {
@@ -964,12 +992,23 @@ export default function EventDetailPage() {
             variant="outline"
             size="sm"
             onClick={sendToReview}
-            disabled={event.status === "en_revision" || event.status === "publicado"}
+            disabled={reviewLoading || event.status === "en_revision" || event.status === "publicado"}
             className="rounded-xl"
             data-testid="button-send-review"
           >
-            <Send className="w-3.5 h-3.5 mr-1.5" />
-            Revisión
+            {reviewLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1.5" />}
+            {reviewLoading ? "Enviando..." : "Revisión"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={approveEvent}
+            disabled={approveLoading || event.status === "publicado"}
+            className="rounded-xl"
+            data-testid="button-approve-event"
+          >
+            {approveLoading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5 mr-1.5" />}
+            {approveLoading ? "Aprobando..." : "Aprobar"}
           </Button>
           <Button variant="destructive" size="sm" onClick={() => setDeleteDialog(true)} className="rounded-xl" data-testid="button-delete-event">
             <Trash2 className="w-3.5 h-3.5 mr-1.5" />
