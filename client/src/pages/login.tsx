@@ -20,13 +20,20 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "" },
   });
 
-  function onSubmit(data: LoginInput) {
+  const [loading, setLoading] = useState(false);
+
+  async function onSubmit(data: LoginInput) {
     setError("");
-    const result = login(data.email, data.password);
-    if (result.success) {
-      navigate("/verify");
-    } else {
-      setError(result.error || "Error al iniciar sesión");
+    setLoading(true);
+    try {
+      const result = await login(data.email, data.password);
+      if (result.success) {
+        navigate("/dashboard");
+      } else {
+        setError(result.error || "Error al iniciar sesión");
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -104,25 +111,13 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-11 rounded-xl text-sm font-medium mt-2" data-testid="button-login">
-                  Iniciar Sesión
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                <Button type="submit" disabled={loading} className="w-full h-11 rounded-xl text-sm font-medium mt-2" data-testid="button-login">
+                  {loading ? "Iniciando..." : "Iniciar Sesión"}
+                  {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
               </form>
             </Form>
 
-            <div className="mt-8 pt-6 border-t border-border/50 text-center">
-              <p className="text-sm text-muted-foreground">
-                ¿No tienes cuenta?{" "}
-                <button
-                  onClick={() => navigate("/register")}
-                  className="text-primary font-medium underline-offset-4 hover:underline transition-colors"
-                  data-testid="link-register"
-                >
-                  Regístrate aquí
-                </button>
-              </p>
-            </div>
           </CardContent>
         </Card>
 

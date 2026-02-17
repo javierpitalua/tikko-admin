@@ -7,8 +7,6 @@ import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import LoginPage from "@/pages/login";
-import RegisterPage from "@/pages/register";
-import VerifyPage from "@/pages/verify";
 import DashboardPage from "@/pages/dashboard";
 import EventsPage from "@/pages/events";
 import EventDetailPage from "@/pages/event-detail";
@@ -55,22 +53,16 @@ function ProtectedLayout() {
 }
 
 function AppRouter() {
-  const { isAuthenticated, admin, verified } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [location] = useLocation();
 
-  if (isAuthenticated && (location === "/login" || location === "/register" || location === "/verify")) {
+  if (isAuthenticated && location === "/login") {
     return <Redirect to="/dashboard" />;
-  }
-
-  if (admin && !verified && location !== "/verify" && location !== "/login" && location !== "/register") {
-    return <Redirect to="/verify" />;
   }
 
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
-      <Route path="/register" component={RegisterPage} />
-      <Route path="/verify" component={VerifyPage} />
       <Route path="/">
         {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}
       </Route>

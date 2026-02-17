@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { getEvents } from "@/lib/store";
+import { EventosService } from "../../api/services/EventosService";
+import type { EventosListItem } from "../../api/models/EventosListItem";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, Calendar, Users, Plus, Ticket, ArrowUpRight } from "lucide-react";
+import { Search, MapPin, Calendar, Plus, Ticket, ArrowUpRight, Loader2 } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
   borrador: "Borrador",
@@ -14,18 +15,42 @@ const STATUS_LABELS: Record<string, string> = {
   publicado: "Publicado",
 };
 
+function mapEstadoToKey(estado?: string | null): string {
+  if (!estado) return "borrador";
+  const lower = estado.toLowerCase();
+  if (lower.includes("publicado") || lower.includes("activo")) return "publicado";
+  if (lower.includes("revisión") || lower.includes("revision") || lower.includes("pendiente")) return "en_revision";
+  return "borrador";
+}
+
 export default function EventsPage() {
   const [, navigate] = useLocation();
-  const events = getEvents();
+  const [events, setEvents] = useState<EventosListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
-  const categories = [...new Set(events.map((e) => e.category))];
+  useEffect(() => {
+    setLoading(true);
+    EventosService.getApiV1EventosList()
+      .then((res) => {
+        setEvents(res.items || []);
+        setError("");
+      })
+      .catch((err) => {
+        setError("Error al cargar los eventos");
+        console.error(err);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const categories = [...new Set(events.map((e) => e.tipoDeCategoriaEvento).filter(Boolean))] as string[];
 
   const filtered = events.filter((e) => {
-    const matchesSearch = e.name.toLowerCase().includes(search.toLowerCase()) ||
-      e.location.toLowerCase().includes(search.toLowerCase());
-    const matchesCat = categoryFilter === "all" || e.category === categoryFilter;
+    const matchesSearch = (e.nombre || "").toLowerCase().includes(search.toLowerCase()) ||
+      (e.ubicacion || "").toLowerCase().includes(search.toLowerCase());
+    const matchesCat = categoryFilter === "all" || e.tipoDeCategoriaEvento === categoryFilter;
     return matchesSearch && matchesCat;
   });
 
@@ -67,82 +92,92 @@ export default function EventsPage() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        {filtered.map((event) => {
-          const totalSold = event.zones.reduce((s, z) => s + z.sold, 0);
-          const totalCap = event.zones.reduce((s, z) => s + z.capacity, 0);
-          const pct = totalCap > 0 ? Math.round((totalSold / totalCap) * 100) : 0;
+      {loading && (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      )}
 
-          return (
-            <Card
-              key={event.id}
-              className="overflow-visible hover-elevate cursor-pointer group"
-              onClick={() => navigate(`/events/${event.id}`)}
-              data-testid={`card-event-${event.id}`}
-            >
-              <div className="aspect-[16/9] overflow-hidden rounded-t-xl relative">
-                <img
-                  src={event.image}
-                  alt={event.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute top-3 right-3">
-                  <Badge
-                    variant={event.status === "publicado" ? "default" : "secondary"}
-                    className="text-[11px]"
-                  >
-                    {STATUS_LABELS[event.status] || event.status}
-                  </Badge>
-                </div>
-                <div className="absolute bottom-3 left-3 right-3">
-                  <Badge variant="secondary" className="text-[11px] bg-black/40 text-white border-0 backdrop-blur-sm">{event.category}</Badge>
-                </div>
-              </div>
-              <CardContent className="p-5 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <h3
-                    className="font-semibold text-foreground leading-snug line-clamp-2"
-                    data-testid={`link-event-${event.id}`}
-                  >
-                    {event.name}
-                  </h3>
-                  <ArrowUpRight className="w-4 h-4 text-muted-foreground shrink-0 invisible group-hover:visible mt-0.5" />
-                </div>
+      {error && !loading && (
+        <div className="text-center py-20">
+          <p className="text-lg font-medium text-destructive">{error}</p>
+          <Button variant="outline" className="mt-4 rounded-xl" onClick={() => window.location.reload()}>
+            Reintentar
+          </Button>
+        </div>
+      )}
 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-3.5 h-3.5 shrink-0" />
-                    <span>{new Date(event.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })} - {new Date(event.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}</span>
+      {!loading && !error && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {filtered.map((event) => {
+            const statusKey = mapEstadoToKey(event.estadoDeEvento);
+            const startDate = event.fechaInicio ? new Date(event.fechaInicio) : null;
+            const endDate = event.fechaFin ? new Date(event.fechaFin) : null;
+            const imageUrl = event.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&h=400&fit=crop";
+
+            return (
+              <Card
+                key={event.id}
+                className="overflow-visible hover-elevate cursor-pointer group"
+                onClick={() => navigate(`/events/${event.id}`)}
+                data-testid={`card-event-${event.id}`}
+              >
+                <div className="aspect-[16/9] overflow-hidden rounded-t-xl relative">
+                  <img
+                    src={imageUrl}
+                    alt={event.nombre || ""}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute top-3 right-3">
+                    <Badge
+                      variant={statusKey === "publicado" ? "default" : "secondary"}
+                      className="text-[11px]"
+                    >
+                      {event.estadoDeEvento || STATUS_LABELS[statusKey] || statusKey}
+                    </Badge>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{event.location}</span>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-border/50">
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Ticket className="w-3.5 h-3.5 shrink-0" />
-                      <span className="tabular-nums">{totalSold}/{totalCap}</span>
+                  {event.tipoDeCategoriaEvento && (
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <Badge variant="secondary" className="text-[11px] bg-black/40 text-white border-0 backdrop-blur-sm">{event.tipoDeCategoriaEvento}</Badge>
                     </div>
-                    <Badge variant="secondary" className="text-[11px] tabular-nums font-normal">{pct}%</Badge>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={`h-full rounded-full bg-gradient-to-r transition-all ${pct >= 80 ? "from-chart-5 to-chart-5" : pct >= 50 ? "from-primary to-chart-3" : "from-chart-2 to-chart-2"}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3
+                      className="font-semibold text-foreground leading-snug line-clamp-2"
+                      data-testid={`link-event-${event.id}`}
+                    >
+                      {event.nombre}
+                    </h3>
+                    <ArrowUpRight className="w-4 h-4 text-muted-foreground shrink-0 invisible group-hover:visible mt-0.5" />
+                  </div>
 
-      {filtered.length === 0 && (
+                  <div className="space-y-2">
+                    {(startDate || endDate) && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="w-3.5 h-3.5 shrink-0" />
+                        <span>
+                          {startDate ? startDate.toLocaleDateString("es-MX", { day: "numeric", month: "short" }) : ""}{endDate ? ` - ${endDate.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}` : ""}
+                        </span>
+                      </div>
+                    )}
+                    {event.ubicacion && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{event.ubicacion}</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {!loading && !error && filtered.length === 0 && (
         <div className="text-center py-20">
           <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-accent mx-auto mb-4">
             <Search className="w-6 h-6 text-muted-foreground" />
