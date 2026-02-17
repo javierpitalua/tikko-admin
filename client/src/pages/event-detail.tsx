@@ -378,17 +378,45 @@ export default function EventDetailPage() {
   }
 
   function requestDelete(type: string, id: string, name: string) {
-    setConfirmDelete({ type, id, name });
+    if (type === "activity") {
+      ActividadesEventoService.getApiV1ActividadesEventoGetDescription(Number(id))
+        .then((res) => {
+          const description = res?.text || res?.value || name;
+          setConfirmDelete({ type, id, name: String(description) });
+        })
+        .catch(() => {
+          setConfirmDelete({ type, id, name });
+        });
+    } else {
+      setConfirmDelete({ type, id, name });
+    }
   }
 
   function executeDelete() {
     if (!confirmDelete || !event) return;
     const { type, id } = confirmDelete;
-    if (type === "zone") deleteZone(id);
-    else if (type === "activity") deleteActivity(id);
-    else if (type === "coupon") deleteCoupon(id);
-    else if (type === "product") deleteProduct(id);
-    setConfirmDelete(null);
+    if (type === "activity") {
+      ActividadesEventoService.postApiV1ActividadesEventoDelete({ id: Number(id) })
+        .then(() => {
+          ActividadesEventoService.getApiV1ActividadesEventoList(Number(event.id))
+            .then((res) => {
+              const activities = mapApiActivitiesToLocal(res.items || []);
+              setEvent((prev) => prev ? { ...prev, activities } : prev);
+            });
+          setConfirmDelete(null);
+          toast({ title: "Actividad eliminada" });
+        })
+        .catch((err) => {
+          console.error("Error deleting activity:", err);
+          setConfirmDelete(null);
+          toast({ title: "Error al eliminar la actividad", variant: "destructive" });
+        });
+    } else {
+      if (type === "zone") deleteZone(id);
+      else if (type === "coupon") deleteCoupon(id);
+      else if (type === "product") deleteProduct(id);
+      setConfirmDelete(null);
+    }
   }
 
   function openActivityDialog(activity?: Activity) {
