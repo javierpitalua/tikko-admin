@@ -1,0 +1,77 @@
+/* generated using openapi-typescript-codegen -- do not edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+export { ApiError } from './core/ApiError';
+export { CancelablePromise, CancelError } from './core/CancelablePromise';
+export { OpenAPI } from './core/OpenAPI';
+export type { OpenAPIConfig } from './core/OpenAPI';
+
+export type { ActividadesEventoListItem } from './models/ActividadesEventoListItem';
+export type { ActividadesEventoListResponse } from './models/ActividadesEventoListResponse';
+export type { CommandResult } from './models/CommandResult';
+export type { CreateActividadEventoRequest } from './models/CreateActividadEventoRequest';
+export type { CreateCuponZonaEventoRequest } from './models/CreateCuponZonaEventoRequest';
+export type { CreateEventoRequest } from './models/CreateEventoRequest';
+export type { CreateProductoAdicionalEventoRequest } from './models/CreateProductoAdicionalEventoRequest';
+export type { CreateReservacionRequest } from './models/CreateReservacionRequest';
+export type { CreateUsuarioRequest } from './models/CreateUsuarioRequest';
+export type { CreateZonaEventoRequest } from './models/CreateZonaEventoRequest';
+export type { CuponesZonaEventoListItem } from './models/CuponesZonaEventoListItem';
+export type { CuponesZonaEventoListResponse } from './models/CuponesZonaEventoListResponse';
+export type { DeleteActividadEventoRequest } from './models/DeleteActividadEventoRequest';
+export type { DeleteCuponZonaEventoRequest } from './models/DeleteCuponZonaEventoRequest';
+export type { DeleteEventoRequest } from './models/DeleteEventoRequest';
+export type { DeleteProductoAdicionalEventoRequest } from './models/DeleteProductoAdicionalEventoRequest';
+export type { DeleteUsuarioRequest } from './models/DeleteUsuarioRequest';
+export type { DeleteZonaEventoRequest } from './models/DeleteZonaEventoRequest';
+export type { DominiosListItem } from './models/DominiosListItem';
+export type { DominiosListResponse } from './models/DominiosListResponse';
+export type { EditActividadEventoRequest } from './models/EditActividadEventoRequest';
+export type { EditCuponZonaEventoRequest } from './models/EditCuponZonaEventoRequest';
+export type { EditEventoRequest } from './models/EditEventoRequest';
+export type { EditProductoAdicionalEventoRequest } from './models/EditProductoAdicionalEventoRequest';
+export type { EditUsuarioRequest } from './models/EditUsuarioRequest';
+export type { EditZonaEventoRequest } from './models/EditZonaEventoRequest';
+export type { ErrorDescription } from './models/ErrorDescription';
+export type { ErrorDetail } from './models/ErrorDetail';
+export type { EstadosDeEventoListItem } from './models/EstadosDeEventoListItem';
+export type { EstadosDeEventoListResponse } from './models/EstadosDeEventoListResponse';
+export type { EstadosDeReservacionListItem } from './models/EstadosDeReservacionListItem';
+export type { EstadosDeReservacionListResponse } from './models/EstadosDeReservacionListResponse';
+export type { EventosListItem } from './models/EventosListItem';
+export type { EventosListResponse } from './models/EventosListResponse';
+export type { LoginRequest } from './models/LoginRequest';
+export type { LoginResponse } from './models/LoginResponse';
+export type { ProductosAdicionalEventoListItem } from './models/ProductosAdicionalEventoListItem';
+export type { ProductosAdicionalEventoListResponse } from './models/ProductosAdicionalEventoListResponse';
+export type { ReservacionesListItem } from './models/ReservacionesListItem';
+export type { ReservacionesListResponse } from './models/ReservacionesListResponse';
+export type { RolesUsuarioListItem } from './models/RolesUsuarioListItem';
+export type { RolesUsuarioListResponse } from './models/RolesUsuarioListResponse';
+export type { SearchResultList } from './models/SearchResultList';
+export type { SelectListItem } from './models/SelectListItem';
+export type { TiposDeCategoriaEventoListItem } from './models/TiposDeCategoriaEventoListItem';
+export type { TiposDeCategoriaEventoListResponse } from './models/TiposDeCategoriaEventoListResponse';
+export type { UbicacionesListItem } from './models/UbicacionesListItem';
+export type { UbicacionesListResponse } from './models/UbicacionesListResponse';
+export type { UsuariosListItem } from './models/UsuariosListItem';
+export type { UsuariosListResponse } from './models/UsuariosListResponse';
+export type { ValidationSummary } from './models/ValidationSummary';
+export type { ZonasEventoListItem } from './models/ZonasEventoListItem';
+export type { ZonasEventoListResponse } from './models/ZonasEventoListResponse';
+
+export { ActividadesEventoService } from './services/ActividadesEventoService';
+export { AuthService } from './services/AuthService';
+export { CuponesZonaEventoService } from './services/CuponesZonaEventoService';
+export { DominiosService } from './services/DominiosService';
+export { EstadosDeEventoService } from './services/EstadosDeEventoService';
+export { EstadosDeReservacionService } from './services/EstadosDeReservacionService';
+export { EventosService } from './services/EventosService';
+export { ProductosAdicionalEventoService } from './services/ProductosAdicionalEventoService';
+export { ReservacionesService } from './services/ReservacionesService';
+export { RolesUsuarioService } from './services/RolesUsuarioService';
+export { TiposDeCategoriaEventoService } from './services/TiposDeCategoriaEventoService';
+export { UbicacionesService } from './services/UbicacionesService';
+export { UsuariosService } from './services/UsuariosService';
+export { ZonasEventoService } from './services/ZonasEventoService';
