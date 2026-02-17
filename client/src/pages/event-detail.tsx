@@ -64,6 +64,9 @@ export default function EventDetailPage() {
   const [couponForm, setCouponForm] = useState({ code: "", discount: "", active: true });
   const [productForm, setProductForm] = useState({ name: "", price: "", available: true });
   const [confirmDelete, setConfirmDelete] = useState<{ type: string; id: string; name: string } | null>(null);
+  const [priceEditDialog, setPriceEditDialog] = useState(false);
+  const [priceEditZone, setPriceEditZone] = useState<Zone | null>(null);
+  const [priceEditValue, setPriceEditValue] = useState("");
 
   function mapApiActivitiesToLocal(items: ActividadesEventoListItem[]): Activity[] {
     return items.map((item) => {
@@ -426,6 +429,36 @@ export default function EventDetailPage() {
       .catch((err) => {
         console.error("Error deleting zone:", err);
         toast({ title: "Error al eliminar la zona", variant: "destructive" });
+      });
+  }
+
+  function openPriceEdit(zone: Zone) {
+    setPriceEditZone(zone);
+    setPriceEditValue(String(zone.price));
+    setPriceEditDialog(true);
+  }
+
+  function savePriceEdit() {
+    if (!event || !priceEditZone || !priceEditValue) return;
+    ZonasEventoService.postApiV1ZonasEventoEdit({
+      id: Number(priceEditZone.id),
+      eventoId: Number(event.id),
+      nombre: priceEditZone.name,
+      capacidad: priceEditZone.capacity,
+      precio: Number(priceEditValue),
+    })
+      .then(() => {
+        ZonasEventoService.getApiV1ZonasEventoList(Number(event.id))
+          .then((res) => {
+            const zones = mapApiZonesToLocal(res.items || []);
+            setEvent((prev) => prev ? { ...prev, zones } : prev);
+          });
+        setPriceEditDialog(false);
+        toast({ title: "Precio actualizado" });
+      })
+      .catch((err) => {
+        console.error("Error updating price:", err);
+        toast({ title: "Error al actualizar el precio", variant: "destructive" });
       });
   }
 
@@ -1074,6 +1107,7 @@ export default function EventDetailPage() {
                         <th className="text-right py-3.5 px-5 text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Precio</th>
                         <th className="text-right py-3.5 px-5 text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Capacidad</th>
                         <th className="text-right py-3.5 px-5 text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Ingreso</th>
+                        <th className="text-right py-3.5 px-5 text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1083,12 +1117,18 @@ export default function EventDetailPage() {
                           <td className="py-3.5 px-5 text-right tabular-nums">${zone.price.toLocaleString("es-MX")}</td>
                           <td className="py-3.5 px-5 text-right tabular-nums">{zone.capacity.toLocaleString()}</td>
                           <td className="py-3.5 px-5 text-right font-medium tabular-nums">${(zone.price * zone.capacity).toLocaleString("es-MX")}</td>
+                          <td className="py-3.5 px-5 text-right">
+                            <Button size="icon" variant="ghost" onClick={() => openPriceEdit(zone)} data-testid={`button-edit-price-${zone.id}`}>
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                       <tr className="bg-accent/20">
                         <td className="py-3.5 px-5 font-bold" colSpan={2}>Total</td>
                         <td className="py-3.5 px-5 text-right font-bold tabular-nums">{totalCap.toLocaleString()}</td>
                         <td className="py-3.5 px-5 text-right font-bold tabular-nums">${event.zones.reduce((sum, z) => sum + z.price * z.capacity, 0).toLocaleString("es-MX")}</td>
+                        <td />
                       </tr>
                     </tbody>
                   </table>
@@ -1248,6 +1288,28 @@ export default function EventDetailPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setZoneDialog(false)} className="rounded-xl">Cancelar</Button>
             <Button onClick={saveZone} className="rounded-xl" data-testid="button-save-zone">
+              <Save className="w-4 h-4 mr-1" />
+              Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={priceEditDialog} onOpenChange={setPriceEditDialog}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Precio</DialogTitle>
+            <DialogDescription>Modifica el precio de la zona <span className="font-semibold text-foreground">{priceEditZone?.name}</span></DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Precio ($)</Label>
+              <Input type="number" value={priceEditValue} onChange={(e) => setPriceEditValue(e.target.value)} placeholder="Ej: 1500" className="h-11 rounded-xl" data-testid="input-price-edit" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPriceEditDialog(false)} className="rounded-xl">Cancelar</Button>
+            <Button onClick={savePriceEdit} className="rounded-xl" data-testid="button-save-price-edit">
               <Save className="w-4 h-4 mr-1" />
               Guardar
             </Button>
