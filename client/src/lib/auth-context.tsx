@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { AuthService } from "../../api/services/AuthService";
+import { UsuariosService } from "../../api/services/UsuariosService";
 import { OpenAPI } from "../../api/core/OpenAPI";
 
 interface AdminInfo {
@@ -95,18 +96,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const role = extractRoleFromToken(response.token);
 
-        const payload = parseJwtPayload(response.token);
-        const tokenName =
-          payload["name"] ||
-          payload["nombre"] ||
-          payload["given_name"] ||
-          payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] ||
-          payload["unique_name"] ||
-          "";
+        let displayName = "";
+        try {
+          const usersRes = await UsuariosService.getApiV1UsuariosList();
+          const users = usersRes.items || [];
+          const me = users.find((u: any) => (u.correoElectronico || "").toLowerCase() === email.toLowerCase());
+          if (me?.nombre) {
+            displayName = [me.nombre, me.apellidoPaterno].filter(Boolean).join(" ");
+          }
+        } catch {}
+
+        if (!displayName) {
+          const payload = parseJwtPayload(response.token);
+          displayName =
+            payload["name"] ||
+            payload["nombre"] ||
+            payload["given_name"] ||
+            payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] ||
+            "";
+        }
 
         const adminInfo: AdminInfo = {
           email,
-          name: tokenName || email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+          name: displayName || email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
           role,
         };
 
