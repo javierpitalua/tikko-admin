@@ -95,9 +95,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const role = extractRoleFromToken(response.token);
 
+        const payload = parseJwtPayload(response.token);
+        const tokenName =
+          payload["name"] ||
+          payload["nombre"] ||
+          payload["given_name"] ||
+          payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] ||
+          payload["unique_name"] ||
+          "";
+
         const adminInfo: AdminInfo = {
           email,
-          name: email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+          name: tokenName || email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
           role,
         };
 
