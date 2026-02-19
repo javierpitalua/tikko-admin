@@ -83,9 +83,14 @@ export default function EventNewPage() {
     };
     reader.readAsDataURL(file);
 
+    if (!admin?.id) {
+      toast({ title: "No se pudo identificar al usuario. Inicia sesión nuevamente.", variant: "destructive" });
+      return;
+    }
+
     setUploadingImage(true);
     try {
-      const result = await ArchivosUploadService.postApiArchivosUpload(file, admin?.id || 0);
+      const result = await ArchivosUploadService.postApiArchivosUpload(file, admin.id);
       setArchivoId(result.id);
       toast({ title: "Imagen subida correctamente" });
     } catch (err: any) {
