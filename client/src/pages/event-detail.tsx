@@ -408,7 +408,7 @@ export default function EventDetailPage() {
 
     setUploadingImage(true);
     try {
-      const result = await ArchivosUploadService.postApiArchivosUpload(file);
+      const result = await ArchivosUploadService.postApiArchivosUpload(file, admin?.id || 0);
       setArchivoId(result.id);
       toast({ title: "Imagen subida correctamente" });
     } catch (err: any) {

@@ -4,6 +4,7 @@ import { UsuariosService } from "../../api/services/UsuariosService";
 import { OpenAPI } from "../../api/core/OpenAPI";
 
 interface AdminInfo {
+  id: number | null;
   email: string;
   name: string;
   role: string;
@@ -98,12 +99,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const role = extractRoleFromToken(response.token);
 
         let displayName = "";
+        let userId: number | null = null;
         try {
           const usersRes = await UsuariosService.getApiV1UsuariosList();
           const users = usersRes.items || [];
           const me = users.find((u: any) => (u.correoElectronico || "").toLowerCase() === email.toLowerCase());
           if (me?.nombre) {
             displayName = [me.nombre, me.apellidoPaterno].filter(Boolean).join(" ");
+          }
+          if (me?.id) {
+            userId = me.id;
           }
         } catch {}
 
@@ -118,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const adminInfo: AdminInfo = {
+          id: userId,
           email,
           name: displayName || email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
           role,

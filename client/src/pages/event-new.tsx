@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "@/lib/auth-context";
 import { EventosService } from "../../api/services/EventosService";
 import { ArchivosUploadService } from "../../api/services/ArchivosUploadService";
 import { TiposDeCategoriaEventoService } from "../../api/services/TiposDeCategoriaEventoService";
@@ -34,6 +35,7 @@ const placeholderBanner = "https://images.unsplash.com/photo-1501281668745-f7f57
 
 export default function EventNewPage() {
   const [, navigate] = useLocation();
+  const { admin } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [bannerImage, setBannerImage] = useState<string>("");
@@ -83,7 +85,7 @@ export default function EventNewPage() {
 
     setUploadingImage(true);
     try {
-      const result = await ArchivosUploadService.postApiArchivosUpload(file);
+      const result = await ArchivosUploadService.postApiArchivosUpload(file, admin?.id || 0);
       setArchivoId(result.id);
       toast({ title: "Imagen subida correctamente" });
     } catch (err: any) {
