@@ -31,6 +31,7 @@ Event management dashboard (boletera) built with React, TypeScript, and Shadcn U
 - **Zones**: `ZonasEventoService` - CRUD for event zones (nombre, capacidad, precio)
 - **Products**: `ProductosAdicionalEventoService` - CRUD for additional products (eventoId, nombre, esGratuito, precio, disponible)
 - **Coupons**: `CuponesZonaEventoService` - CRUD for zone coupons (zonaEventoId, codigo, porcentajeDescuento). Coupons are per-zone, fetched by iterating zone IDs.
+- **File Upload**: `ArchivosService.postApiV1ArchivosCreate(file)` - uploads image via multipart form data, returns `{ url }`. Used for event banner images in create/edit flows.
 - **Reservations**: `ReservacionesService.getApiV1ReservacionesList()` → returns `ReservacionesListResponse` with items (folio, nombre, correoElectronico, evento, zonaEvento, cantidadBoletos, subtotal, fechaReservacion, fechaExpiracion, estadoDeReservacion). Event name is clickable → navigates to events list.
 - **API Models**: `EventosListItem` has fields: id, nombre, descripcion, bannerUrl, fechaInicio, fechaFin, estadoDeEvento, tipoDeCategoriaEvento, ubicacion
 - **Token**: Stored in localStorage as `tikko_token`, set on `OpenAPI.TOKEN` for authenticated requests

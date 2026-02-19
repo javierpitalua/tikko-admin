@@ -3,6 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { getEvents, saveEvents, generateId } from "@/lib/store";
 import { useAuth } from "@/lib/auth-context";
 import { EventosService } from "../../api/services/EventosService";
+import { ArchivosService } from "../../api/services/ArchivosService";
 import { ActividadesEventoService } from "../../api/services/ActividadesEventoService";
 import { ZonasEventoService } from "../../api/services/ZonasEventoService";
 import { ProductosAdicionalEventoService } from "../../api/services/ProductosAdicionalEventoService";
@@ -54,6 +55,7 @@ export default function EventDetailPage() {
   const [apiItem, setApiItem] = useState<EventosListItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ name: "", startDate: "", endDate: "", ubicacionId: "", tipoDeCategoriaEventoId: "", description: "", image: "" });
@@ -318,7 +320,7 @@ export default function EventDetailPage() {
     setEditing(false);
   }
 
-  function saveBasicInfo() {
+  async function saveBasicInfo() {
     if (!event || !apiItem) return;
     if (!draft.name.trim() || !draft.startDate || !draft.endDate || !draft.ubicacionId || !draft.tipoDeCategoriaEventoId) {
       toast({ title: "Completa todos los campos obligatorios", variant: "destructive" });
@@ -326,11 +328,25 @@ export default function EventDetailPage() {
     }
 
     setSaving(true);
+
+    let imageUrl = draft.image || null;
+    if (pendingImageFile) {
+      try {
+        const uploadResult = await ArchivosService.postApiV1ArchivosCreate(pendingImageFile);
+        imageUrl = uploadResult.url;
+        setPendingImageFile(null);
+      } catch (uploadErr: any) {
+        toast({ title: "Error al subir la imagen", description: uploadErr?.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+    }
+
     const requestBody: EditEventoRequest = {
       id: Number(event.id),
       nombre: draft.name.trim(),
       descripcion: draft.description.trim(),
-      bannerUrl: draft.image || null,
+      bannerUrl: imageUrl,
       fechaInicio: new Date(draft.startDate + "T00:00:00").toISOString(),
       fechaFin: new Date(draft.endDate + "T23:59:59").toISOString(),
       ubicacionId: Number(draft.ubicacionId),
@@ -360,14 +376,14 @@ export default function EventDetailPage() {
           location: selectedLocation?.nombre || event.location,
           category: selectedCategory?.nombre || event.category,
           description: draft.description.trim(),
-          image: draft.image,
+          image: imageUrl || draft.image,
         };
         setEvent(updated);
         setApiItem({
           ...apiItem,
           nombre: updated.name,
           descripcion: updated.description,
-          bannerUrl: updated.image,
+          bannerUrl: imageUrl || updated.image,
           fechaInicio: draft.startDate,
           fechaFin: draft.endDate,
           ubicacionId: Number(draft.ubicacionId),
@@ -394,6 +410,7 @@ export default function EventDetailPage() {
       toast({ title: "Solo se permiten archivos de imagen", variant: "destructive" });
       return;
     }
+    setPendingImageFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;

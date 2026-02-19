@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ArchivosListResponse } from '../models/ArchivosListResponse';
-import type { CommandResult } from '../models/CommandResult';
-import type { EditArchivoRequest } from '../models/EditArchivoRequest';
-import type { SearchResultList } from '../models/SearchResultList';
-import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
+import type { ArchivosListResponse } from "../models/ArchivosListResponse";
+import type { CommandResult } from "../models/CommandResult";
+import type { EditArchivoRequest } from "../models/EditArchivoRequest";
+import type { SearchResultList } from "../models/SearchResultList";
+import type { CancelablePromise } from "../core/CancelablePromise";
+import { OpenAPI } from "../core/OpenAPI";
+import { request as __request } from "../core/request";
 export class ArchivosService {
     /**
      * @param searchTerm
@@ -19,10 +19,10 @@ export class ArchivosService {
         searchTerm?: string,
     ): CancelablePromise<SearchResultList> {
         return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/Archivos/LoadSelectList',
+            method: "GET",
+            url: "/api/v1/Archivos/LoadSelectList",
             query: {
-                'searchTerm': searchTerm,
+                searchTerm: searchTerm,
             },
         });
     }
@@ -35,10 +35,10 @@ export class ArchivosService {
         requestBody?: EditArchivoRequest,
     ): CancelablePromise<CommandResult> {
         return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/Archivos/Edit',
+            method: "POST",
+            url: "/api/v1/Archivos/Edit",
             body: requestBody,
-            mediaType: 'application/json',
+            mediaType: "application/json",
         });
     }
     /**
@@ -52,11 +52,11 @@ export class ArchivosService {
         id?: number,
     ): CancelablePromise<ArchivosListResponse> {
         return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/Archivos/List',
+            method: "GET",
+            url: "/api/v1/Archivos/List",
             query: {
-                'UsuarioId': usuarioId,
-                'Id': id,
+                UsuarioId: usuarioId,
+                Id: id,
             },
         });
     }
