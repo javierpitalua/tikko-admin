@@ -16,6 +16,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
@@ -133,6 +134,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const register = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const nameParts = name.trim().split(/\s+/);
+      const nombre = nameParts[0] || "";
+      const apellidoPaterno = nameParts.slice(1).join(" ") || "";
+
+      await UsuariosService.postApiV1UsuariosCreate({
+        correoElectronico: email,
+        nombre,
+        apellidoPaterno: apellidoPaterno || null,
+        apellidoMaterno: null,
+        habilitado: true,
+        password,
+      });
+
+      return { success: true };
+    } catch (err: any) {
+      const msg = err?.body?.errorMessage || err?.body?.message || err?.message || "Error al crear la cuenta";
+      return { success: false, error: msg };
+    }
+  }, []);
+
   const logout = useCallback(() => {
     OpenAPI.TOKEN = undefined;
     clearStoredAuth();
@@ -140,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ ...state, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

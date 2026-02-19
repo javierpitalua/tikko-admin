@@ -118,6 +118,19 @@ export default function LoginPage() {
               </form>
             </Form>
 
+            <div className="mt-8 pt-6 border-t border-border/50 text-center">
+              <p className="text-sm text-muted-foreground">
+                ¿No tienes cuenta?{" "}
+                <button
+                  onClick={() => navigate("/register")}
+                  className="text-primary font-medium underline-offset-4 hover:underline transition-colors"
+                  data-testid="link-register"
+                >
+                  Regístrate
+                </button>
+              </p>
+            </div>
+
           </CardContent>
         </Card>
 

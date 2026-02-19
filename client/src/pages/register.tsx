@@ -15,18 +15,25 @@ export default function RegisterPage() {
   const [, navigate] = useLocation();
   const [error, setError] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
 
-  function onSubmit(data: RegisterInput) {
+  async function onSubmit(data: RegisterInput) {
     setError("");
-    const result = registerAdmin(data.name, data.email, data.password);
-    if (result.success) {
-      navigate("/verify");
-    } else {
-      setError(result.error || "Error al registrarse");
+    setLoading(true);
+    try {
+      const result = await registerAdmin(data.name, data.email, data.password);
+      if (result.success) {
+        navigate("/login");
+      } else {
+        setError(result.error || "Error al registrarse");
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -149,9 +156,9 @@ export default function RegisterPage() {
                     )}
                   />
                 </div>
-                <Button type="submit" className="w-full h-11 rounded-xl text-sm font-medium mt-2" data-testid="button-register">
-                  Crear Cuenta
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                <Button type="submit" disabled={loading} className="w-full h-11 rounded-xl text-sm font-medium mt-2" data-testid="button-register">
+                  {loading ? "Creando cuenta..." : "Crear Cuenta"}
+                  {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
               </form>
             </Form>
