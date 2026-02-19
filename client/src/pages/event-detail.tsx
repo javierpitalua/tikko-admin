@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { getEvents, saveEvents, generateId } from "@/lib/store";
 import { useAuth } from "@/lib/auth-context";
 import { EventosService } from "../../api/services/EventosService";
-import { ArchivosService } from "../../api/services/ArchivosService";
+import { ArchivosUploadService } from "../../api/services/ArchivosUploadService";
 import { ActividadesEventoService } from "../../api/services/ActividadesEventoService";
 import { ZonasEventoService } from "../../api/services/ZonasEventoService";
 import { ProductosAdicionalEventoService } from "../../api/services/ProductosAdicionalEventoService";
@@ -55,7 +55,8 @@ export default function EventDetailPage() {
   const [apiItem, setApiItem] = useState<EventosListItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [archivoId, setArchivoId] = useState<number | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ name: "", startDate: "", endDate: "", ubicacionId: "", tipoDeCategoriaEventoId: "", description: "", image: "" });
@@ -329,29 +330,16 @@ export default function EventDetailPage() {
 
     setSaving(true);
 
-    let imageUrl = draft.image || null;
-    if (pendingImageFile) {
-      try {
-        const uploadResult = await ArchivosService.postApiV1ArchivosCreate(pendingImageFile);
-        imageUrl = uploadResult.url;
-        setPendingImageFile(null);
-      } catch (uploadErr: any) {
-        toast({ title: "Error al subir la imagen", description: uploadErr?.message, variant: "destructive" });
-        setSaving(false);
-        return;
-      }
-    }
-
-    const requestBody: EditEventoRequest = {
+    const requestBody: any = {
       id: Number(event.id),
       nombre: draft.name.trim(),
       descripcion: draft.description.trim(),
-      bannerUrl: imageUrl,
       fechaInicio: new Date(draft.startDate + "T00:00:00").toISOString(),
       fechaFin: new Date(draft.endDate + "T23:59:59").toISOString(),
       ubicacionId: Number(draft.ubicacionId),
       tipoDeCategoriaEventoId: Number(draft.tipoDeCategoriaEventoId),
       estadoDeEventoId: apiItem.estadoDeEventoId,
+      archivoId: archivoId,
     };
 
     EventosService.postApiV1EventosEdit(requestBody)
@@ -376,14 +364,15 @@ export default function EventDetailPage() {
           location: selectedLocation?.nombre || event.location,
           category: selectedCategory?.nombre || event.category,
           description: draft.description.trim(),
-          image: imageUrl || draft.image,
+          image: draft.image,
         };
         setEvent(updated);
+        setArchivoId(null);
         setApiItem({
           ...apiItem,
           nombre: updated.name,
           descripcion: updated.description,
-          bannerUrl: imageUrl || updated.image,
+          bannerUrl: updated.image,
           fechaInicio: draft.startDate,
           fechaFin: draft.endDate,
           ubicacionId: Number(draft.ubicacionId),
@@ -403,20 +392,32 @@ export default function EventDetailPage() {
       .finally(() => setSaving(false));
   }
 
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast({ title: "Solo se permiten archivos de imagen", variant: "destructive" });
       return;
     }
-    setPendingImageFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
       setDraft((prev) => ({ ...prev, image: dataUrl }));
     };
     reader.readAsDataURL(file);
+
+    setUploadingImage(true);
+    try {
+      const result = await ArchivosUploadService.postApiArchivosUpload(file);
+      setArchivoId(result.id);
+      toast({ title: "Imagen subida correctamente" });
+    } catch (err: any) {
+      toast({ title: "Error al subir la imagen", description: err?.message, variant: "destructive" });
+      setDraft((prev) => ({ ...prev, image: "" }));
+      setArchivoId(null);
+    } finally {
+      setUploadingImage(false);
+    }
   }
 
   function requestDeleteEvent() {

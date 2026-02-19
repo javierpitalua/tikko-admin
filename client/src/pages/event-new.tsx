@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EventosService } from "../../api/services/EventosService";
-import { ArchivosService } from "../../api/services/ArchivosService";
+import { ArchivosUploadService } from "../../api/services/ArchivosUploadService";
 import { TiposDeCategoriaEventoService } from "../../api/services/TiposDeCategoriaEventoService";
 import { UbicacionesService } from "../../api/services/UbicacionesService";
 import type { UbicacionesListItem } from "../../api/models/UbicacionesListItem";
@@ -37,7 +37,7 @@ export default function EventNewPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [bannerImage, setBannerImage] = useState<string>("");
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [archivoId, setArchivoId] = useState<number | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<TiposDeCategoriaEventoListItem[]>([]);
@@ -67,40 +67,37 @@ export default function EventNewPage() {
       .finally(() => setLoadingCatalogs(false));
   }, []);
 
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast({ title: "Solo se permiten archivos de imagen", variant: "destructive" });
       return;
     }
-    setBannerFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
       setBannerImage(dataUrl);
     };
     reader.readAsDataURL(file);
+
+    setUploadingImage(true);
+    try {
+      const result = await ArchivosUploadService.postApiArchivosUpload(file);
+      setArchivoId(result.id);
+      toast({ title: "Imagen subida correctamente" });
+    } catch (err: any) {
+      toast({ title: "Error al subir la imagen", description: err?.message, variant: "destructive" });
+      setBannerImage("");
+      setArchivoId(null);
+    } finally {
+      setUploadingImage(false);
+    }
   }
 
   async function onSubmit(data: NewEventInput) {
     setSubmitting(true);
     try {
-      let imageUrl: string | null = null;
-      if (bannerFile) {
-        setUploadingImage(true);
-        try {
-          const uploadResult = await ArchivosService.postApiV1ArchivosCreate(bannerFile);
-          imageUrl = uploadResult.url;
-        } catch (uploadErr: any) {
-          toast({ title: "Error al subir la imagen", description: uploadErr?.message, variant: "destructive" });
-          setUploadingImage(false);
-          setSubmitting(false);
-          return;
-        }
-        setUploadingImage(false);
-      }
-
       const result = await EventosService.postApiV1EventosCreate({
         nombre: data.name,
         descripcion: data.description,
@@ -108,8 +105,8 @@ export default function EventNewPage() {
         fechaFin: new Date(data.endDate + "T23:59:59").toISOString(),
         ubicacionId: Number(data.ubicacionId),
         tipoDeCategoriaEventoId: Number(data.tipoDeCategoriaEventoId),
-        bannerUrl: imageUrl,
-      });
+        archivoId: archivoId,
+      } as any);
 
       if (result.ok) {
         toast({ title: "Evento creado exitosamente" });
@@ -179,6 +176,12 @@ export default function EventNewPage() {
                         >
                           <X className="w-4 h-4" />
                         </Button>
+                        {uploadingImage && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
+                            <Loader2 className="w-6 h-6 text-white animate-spin" />
+                            <span className="text-white text-sm ml-2">Subiendo...</span>
+                          </div>
+                        )}
                         <Button
                           type="button"
                           variant="outline"
@@ -284,7 +287,7 @@ export default function EventNewPage() {
 
                   <Button type="submit" disabled={submitting} className="w-full rounded-xl" data-testid="button-create-event">
                     {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    {uploadingImage ? "Subiendo imagen..." : submitting ? "Creando..." : "Crear Evento"}
+                    {submitting ? "Creando..." : "Crear Evento"}
                   </Button>
                 </form>
               </Form>
