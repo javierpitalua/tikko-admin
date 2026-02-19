@@ -16,6 +16,8 @@ export type EventosListItem = {
     creadoPor?: string | null;
     fechaModificacion?: string | null;
     modificadoPor?: string | null;
+    archivoId?: number | null;
+    archivo?: string | null;
     estadoDeEvento?: string | null;
     tipoDeCategoriaEvento?: string | null;
     ubicacion?: string | null;

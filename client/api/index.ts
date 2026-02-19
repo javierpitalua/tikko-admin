@@ -13,7 +13,6 @@ export type { ArchivosListItem } from './models/ArchivosListItem';
 export type { ArchivosListResponse } from './models/ArchivosListResponse';
 export type { CommandResult } from './models/CommandResult';
 export type { CreateActividadEventoRequest } from './models/CreateActividadEventoRequest';
-export type { CreateArchivoRequest } from './models/CreateArchivoRequest';
 export type { CreateCuponZonaEventoRequest } from './models/CreateCuponZonaEventoRequest';
 export type { CreateEventoRequest } from './models/CreateEventoRequest';
 export type { CreateProductoAdicionalEventoRequest } from './models/CreateProductoAdicionalEventoRequest';
@@ -67,6 +66,7 @@ export type { ZonasEventoListResponse } from './models/ZonasEventoListResponse';
 
 export { ActividadesEventoService } from './services/ActividadesEventoService';
 export { ArchivosService } from './services/ArchivosService';
+export { ArchivosUploadService } from './services/ArchivosUploadService';
 export { AuthService } from './services/AuthService';
 export { CuponesZonaEventoService } from './services/CuponesZonaEventoService';
 export { DominiosService } from './services/DominiosService';

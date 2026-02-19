@@ -235,47 +235,37 @@
         }
       }
     },
-    "/api/v1/Archivos/Create": {
-      "post": {
+    "/api/v1/Archivos/LoadSelectList": {
+      "get": {
         "tags": [
           "Archivos"
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateArchivoRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateArchivoRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateArchivoRequest"
-              }
+        "parameters": [
+          {
+            "name": "searchTerm",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/CommandResult"
+                  "$ref": "#/components/schemas/SearchResultList"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CommandResult"
+                  "$ref": "#/components/schemas/SearchResultList"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CommandResult"
+                  "$ref": "#/components/schemas/SearchResultList"
                 }
               }
             }
@@ -371,6 +361,74 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ArchivosListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/archivos/upload": {
+      "post": {
+        "tags": [
+          "ArchivosUpload"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "File": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "Descripcion": {
+                    "type": "string"
+                  },
+                  "UsuarioId": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "Folder": {
+                    "type": "string"
+                  }
+                }
+              },
+              "encoding": {
+                "File": {
+                  "style": "form"
+                },
+                "Descripcion": {
+                  "style": "form"
+                },
+                "UsuarioId": {
+                  "style": "form"
+                },
+                "Folder": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
                 }
               }
             }
@@ -1114,6 +1172,14 @@
           "Eventos"
         ],
         "parameters": [
+          {
+            "name": "ArchivoId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
           {
             "name": "DominioId",
             "in": "query",
@@ -2431,40 +2497,6 @@
         },
         "additionalProperties": false
       },
-      "CreateArchivoRequest": {
-        "type": "object",
-        "properties": {
-          "nombreArchivo": {
-            "type": "string",
-            "nullable": true
-          },
-          "descripcion": {
-            "type": "string",
-            "nullable": true
-          },
-          "fechaCarga": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "usuarioId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "claveServicioPersistencia": {
-            "type": "string",
-            "nullable": true
-          },
-          "mimeType": {
-            "type": "string",
-            "nullable": true
-          },
-          "url": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "CreateCuponZonaEventoRequest": {
         "type": "object",
         "properties": {
@@ -2486,6 +2518,10 @@
       "CreateEventoRequest": {
         "type": "object",
         "properties": {
+          "estadoDeEventoId": {
+            "type": "integer",
+            "format": "int32"
+          },
           "ubicacionId": {
             "type": "integer",
             "format": "int32"
@@ -2509,6 +2545,11 @@
           "fechaFin": {
             "type": "string",
             "format": "date-time"
+          },
+          "archivoId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2945,6 +2986,11 @@
           "fechaFin": {
             "type": "string",
             "format": "date-time"
+          },
+          "archivoId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -3192,6 +3238,15 @@
             "nullable": true
           },
           "modificadoPor": {
+            "type": "string",
+            "nullable": true
+          },
+          "archivoId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "archivo": {
             "type": "string",
             "nullable": true
           },

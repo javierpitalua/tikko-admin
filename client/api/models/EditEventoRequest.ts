@@ -11,5 +11,6 @@ export type EditEventoRequest = {
     descripcion?: string | null;
     fechaInicio?: string;
     fechaFin?: string;
+    archivoId?: number | null;
 };
 

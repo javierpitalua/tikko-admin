@@ -91,6 +91,7 @@ export class EventosService {
         });
     }
     /**
+     * @param archivoId
      * @param dominioId
      * @param estadoDeEventoId
      * @param tipoDeCategoriaEventoId
@@ -100,6 +101,7 @@ export class EventosService {
      * @throws ApiError
      */
     public static getApiV1EventosList(
+        archivoId?: number,
         dominioId?: number,
         estadoDeEventoId?: number,
         tipoDeCategoriaEventoId?: number,
@@ -110,6 +112,7 @@ export class EventosService {
             method: 'GET',
             url: '/api/v1/Eventos/List',
             query: {
+                'ArchivoId': archivoId,
                 'DominioId': dominioId,
                 'EstadoDeEventoId': estadoDeEventoId,
                 'TipoDeCategoriaEventoId': tipoDeCategoriaEventoId,
