@@ -10,7 +10,6 @@ export type EventosListItem = {
     tipoDeCategoriaEventoId?: number;
     nombre?: string | null;
     descripcion?: string | null;
-    bannerUrl?: string | null;
     fechaInicio?: string;
     fechaFin?: string;
     fechaCreacion?: string;

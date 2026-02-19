@@ -235,6 +235,149 @@
         }
       }
     },
+    "/api/v1/Archivos/Create": {
+      "post": {
+        "tags": [
+          "Archivos"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArchivoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArchivoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArchivoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/Archivos/Edit": {
+      "post": {
+        "tags": [
+          "Archivos"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditArchivoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditArchivoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditArchivoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/Archivos/List": {
+      "get": {
+        "tags": [
+          "Archivos"
+        ],
+        "parameters": [
+          {
+            "name": "UsuarioId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchivosListResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchivosListResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchivosListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/Auth/Login": {
       "post": {
         "tags": [
@@ -1808,6 +1951,44 @@
         }
       }
     },
+    "/api/v1/Usuarios/LoadSelectList": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "parameters": [
+          {
+            "name": "searchTerm",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultList"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultList"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/ZonasEvento/Create": {
       "post": {
         "tags": [
@@ -2148,6 +2329,61 @@
         },
         "additionalProperties": false
       },
+      "ArchivosListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombreArchivo": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaCarga": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "usuarioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "claveServicioPersistencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "usuario": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ArchivosListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArchivosListItem"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CommandResult": {
         "type": "object",
         "properties": {
@@ -2195,6 +2431,40 @@
         },
         "additionalProperties": false
       },
+      "CreateArchivoRequest": {
+        "type": "object",
+        "properties": {
+          "nombreArchivo": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaCarga": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "usuarioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "claveServicioPersistencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateCuponZonaEventoRequest": {
         "type": "object",
         "properties": {
@@ -2216,10 +2486,6 @@
       "CreateEventoRequest": {
         "type": "object",
         "properties": {
-          "estadoDeEventoId": {
-            "type": "integer",
-            "format": "int32"
-          },
           "ubicacionId": {
             "type": "integer",
             "format": "int32"
@@ -2233,10 +2499,6 @@
             "nullable": true
           },
           "descripcion": {
-            "type": "string",
-            "nullable": true
-          },
-          "bannerUrl": {
             "type": "string",
             "nullable": true
           },
@@ -2589,6 +2851,44 @@
         },
         "additionalProperties": false
       },
+      "EditArchivoRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombreArchivo": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaCarga": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "usuarioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "claveServicioPersistencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "EditCuponZonaEventoRequest": {
         "type": "object",
         "properties": {
@@ -2635,10 +2935,6 @@
             "nullable": true
           },
           "descripcion": {
-            "type": "string",
-            "nullable": true
-          },
-          "bannerUrl": {
             "type": "string",
             "nullable": true
           },
@@ -2871,10 +3167,6 @@
             "nullable": true
           },
           "descripcion": {
-            "type": "string",
-            "nullable": true
-          },
-          "bannerUrl": {
             "type": "string",
             "nullable": true
           },

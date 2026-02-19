@@ -9,7 +9,6 @@ export type EditEventoRequest = {
     tipoDeCategoriaEventoId?: number;
     nombre?: string | null;
     descripcion?: string | null;
-    bannerUrl?: string | null;
     fechaInicio?: string;
     fechaFin?: string;
 };

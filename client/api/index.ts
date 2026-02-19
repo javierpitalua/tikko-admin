@@ -9,8 +9,11 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { ActividadesEventoListItem } from './models/ActividadesEventoListItem';
 export type { ActividadesEventoListResponse } from './models/ActividadesEventoListResponse';
+export type { ArchivosListItem } from './models/ArchivosListItem';
+export type { ArchivosListResponse } from './models/ArchivosListResponse';
 export type { CommandResult } from './models/CommandResult';
 export type { CreateActividadEventoRequest } from './models/CreateActividadEventoRequest';
+export type { CreateArchivoRequest } from './models/CreateArchivoRequest';
 export type { CreateCuponZonaEventoRequest } from './models/CreateCuponZonaEventoRequest';
 export type { CreateEventoRequest } from './models/CreateEventoRequest';
 export type { CreateProductoAdicionalEventoRequest } from './models/CreateProductoAdicionalEventoRequest';
@@ -28,6 +31,7 @@ export type { DeleteZonaEventoRequest } from './models/DeleteZonaEventoRequest';
 export type { DominiosListItem } from './models/DominiosListItem';
 export type { DominiosListResponse } from './models/DominiosListResponse';
 export type { EditActividadEventoRequest } from './models/EditActividadEventoRequest';
+export type { EditArchivoRequest } from './models/EditArchivoRequest';
 export type { EditCuponZonaEventoRequest } from './models/EditCuponZonaEventoRequest';
 export type { EditEventoRequest } from './models/EditEventoRequest';
 export type { EditProductoAdicionalEventoRequest } from './models/EditProductoAdicionalEventoRequest';
@@ -62,6 +66,7 @@ export type { ZonasEventoListItem } from './models/ZonasEventoListItem';
 export type { ZonasEventoListResponse } from './models/ZonasEventoListResponse';
 
 export { ActividadesEventoService } from './services/ActividadesEventoService';
+export { ArchivosService } from './services/ArchivosService';
 export { AuthService } from './services/AuthService';
 export { CuponesZonaEventoService } from './services/CuponesZonaEventoService';
 export { DominiosService } from './services/DominiosService';

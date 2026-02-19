@@ -3,12 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CreateEventoRequest = {
-    estadoDeEventoId?: number;
     ubicacionId?: number;
     tipoDeCategoriaEventoId?: number;
     nombre?: string | null;
     descripcion?: string | null;
-    bannerUrl?: string | null;
     fechaInicio?: string;
     fechaFin?: string;
 };

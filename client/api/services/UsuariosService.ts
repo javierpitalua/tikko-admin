@@ -6,6 +6,7 @@ import type { CommandResult } from '../models/CommandResult';
 import type { CreateUsuarioRequest } from '../models/CreateUsuarioRequest';
 import type { DeleteUsuarioRequest } from '../models/DeleteUsuarioRequest';
 import type { EditUsuarioRequest } from '../models/EditUsuarioRequest';
+import type { SearchResultList } from '../models/SearchResultList';
 import type { SelectListItem } from '../models/SelectListItem';
 import type { UsuariosListResponse } from '../models/UsuariosListResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -86,6 +87,22 @@ export class UsuariosService {
             url: '/api/v1/Usuarios/List',
             query: {
                 'Id': id,
+            },
+        });
+    }
+    /**
+     * @param searchTerm
+     * @returns SearchResultList OK
+     * @throws ApiError
+     */
+    public static getApiV1UsuariosLoadSelectList(
+        searchTerm?: string,
+    ): CancelablePromise<SearchResultList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/Usuarios/LoadSelectList',
+            query: {
+                'searchTerm': searchTerm,
             },
         });
     }
