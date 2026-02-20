@@ -220,6 +220,7 @@ export default function EventDetailPage() {
         if (items.length > 0) {
           const raw = items[0];
           setApiItem(raw);
+          if (raw.archivoId) setArchivoId(raw.archivoId);
           const found = mapApiEventToLocal(raw);
           const activities = mapApiActivitiesToLocal((actRes as any).items || []);
           const zones = mapApiZonesToLocal((zonRes as any).items || []);

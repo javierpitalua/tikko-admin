@@ -177,7 +177,8 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   app.use((req, res, next) => {
-    if (req.path.startsWith("/api/v1/") || req.path.startsWith("/api/Archivos/")) {
+    const lowerPath = req.path.toLowerCase();
+    if (lowerPath.startsWith("/api/v1/") || lowerPath.startsWith("/api/archivos/")) {
       return proxyToApi(req, res);
     }
     next();
