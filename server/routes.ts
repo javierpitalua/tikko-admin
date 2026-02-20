@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { createProxyMiddleware } from "http-proxy-middleware";
 import { log } from "./index";
 
 const API_BASE = "https://dev-api.tikko.mx";
@@ -127,6 +128,17 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  app.use(
+    "/api",
+    createProxyMiddleware({
+      target: API_BASE,
+      changeOrigin: true,
+      pathFilter: (path) => {
+        return path.startsWith("/api/v1/") || path.startsWith("/api/Archivos/");
+      },
+    })
+  );
+
   expireReservations();
   setInterval(expireReservations, 10 * 60 * 1000);
 
