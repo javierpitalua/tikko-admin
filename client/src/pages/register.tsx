@@ -2,36 +2,62 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
-import { registerSchema, type RegisterInput } from "@shared/schema";
-import { useAuth } from "@/lib/auth-context";
+import { z } from "zod";
+import { UsuariosService } from "../../api/services/UsuariosService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 import { Ticket, User, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 
-export default function RegisterPage() {
-  const { register: registerAdmin } = useAuth();
-  const [, navigate] = useLocation();
-  const [error, setError] = useState("");
+const registerSchema = z.object({
+  nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  apellido: z.string().min(2, "El apellido debe tener al menos 2 caracteres"),
+  correo: z.string().email("Ingresa un correo electrónico válido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+});
 
+type RegisterInput = z.infer<typeof registerSchema>;
+
+export default function RegisterPage() {
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { nombre: "", apellido: "", correo: "", password: "" },
   });
 
   async function onSubmit(data: RegisterInput) {
     setError("");
     setLoading(true);
     try {
-      const result = await registerAdmin(data.name, data.email, data.password);
-      if (result.success) {
+      const result = await UsuariosService.postApiV1UsuariosCreate({
+        nombre: data.nombre,
+        apellidoPaterno: data.apellido,
+        correoElectronico: data.correo,
+        password: data.password,
+        habilitado: true,
+      });
+      if (result.ok) {
+        toast({ title: "Cuenta creada exitosamente. Ahora puedes iniciar sesión." });
         navigate("/login");
       } else {
-        setError(result.error || "Error al registrarse");
+        const errors = (result as any).validationSummary?.errors;
+        const msg = errors && errors.length > 0
+          ? errors.map((e: any) => e.description || e.errorMessage || "").filter(Boolean).join(", ")
+          : "Error al crear la cuenta";
+        setError(msg);
       }
+    } catch (err: any) {
+      const msg = err?.body?.validationSummary?.errors?.[0]?.description
+        || err?.body?.validationSummary?.errorMessage
+        || err?.message
+        || "Error de conexión";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -49,7 +75,7 @@ export default function RegisterPage() {
             <Ticket className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Tikko Admin</h1>
-          <p className="text-muted-foreground mt-1.5 text-sm">Crea tu cuenta de administrador</p>
+          <p className="text-muted-foreground mt-1.5 text-sm">Crea tu cuenta para comenzar</p>
         </div>
 
         <Card className="auth-card border-0 shadow-xl">
@@ -60,37 +86,60 @@ export default function RegisterPage() {
             </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {error && (
                   <div className="p-3.5 rounded-xl bg-destructive/10 text-destructive text-sm flex items-center gap-2.5" data-testid="text-register-error">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     {error}
                   </div>
                 )}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="nombre"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nombre</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+                            <Input
+                              {...field}
+                              placeholder="Tu nombre"
+                              className="pl-11 h-11 rounded-xl bg-accent/40 border-border/60 focus:bg-background transition-colors"
+                              data-testid="input-nombre"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="apellido"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Apellido</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+                            <Input
+                              {...field}
+                              placeholder="Tu apellido"
+                              className="pl-11 h-11 rounded-xl bg-accent/40 border-border/60 focus:bg-background transition-colors"
+                              data-testid="input-apellido"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <FormField
                   control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nombre completo</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-                          <Input
-                            {...field}
-                            placeholder="Tu nombre"
-                            className="pl-11 h-11 rounded-xl bg-accent/40 border-border/60 focus:bg-background transition-colors"
-                            data-testid="input-name"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
+                  name="correo"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Correo electrónico</FormLabel>
@@ -100,9 +149,9 @@ export default function RegisterPage() {
                           <Input
                             {...field}
                             type="email"
-                            placeholder="admin@ejemplo.com"
+                            placeholder="tu@correo.com"
                             className="pl-11 h-11 rounded-xl bg-accent/40 border-border/60 focus:bg-background transition-colors"
-                            data-testid="input-email"
+                            data-testid="input-correo"
                           />
                         </div>
                       </FormControl>
@@ -110,52 +159,28 @@ export default function RegisterPage() {
                     </FormItem>
                   )}
                 />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Contraseña</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-                            <Input
-                              {...field}
-                              type="password"
-                              placeholder="Mín. 6 chars"
-                              className="pl-11 h-11 rounded-xl bg-accent/40 border-border/60 focus:bg-background transition-colors"
-                              data-testid="input-password"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Confirmar</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-                            <Input
-                              {...field}
-                              type="password"
-                              placeholder="Repite"
-                              className="pl-11 h-11 rounded-xl bg-accent/40 border-border/60 focus:bg-background transition-colors"
-                              data-testid="input-confirm-password"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Contraseña</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+                          <Input
+                            {...field}
+                            type="password"
+                            placeholder="Mínimo 6 caracteres"
+                            className="pl-11 h-11 rounded-xl bg-accent/40 border-border/60 focus:bg-background transition-colors"
+                            data-testid="input-password"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <Button type="submit" disabled={loading} className="w-full h-11 rounded-xl text-sm font-medium mt-2" data-testid="button-register">
                   {loading ? "Creando cuenta..." : "Crear Cuenta"}
                   {!loading && <ArrowRight className="w-4 h-4 ml-2" />}

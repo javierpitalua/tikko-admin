@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import LoginPage from "@/pages/login";
+import RegisterPage from "@/pages/register";
 import DashboardPage from "@/pages/dashboard";
 import EventsPage from "@/pages/events";
 import EventDetailPage from "@/pages/event-detail";
@@ -56,13 +57,14 @@ function AppRouter() {
   const { isAuthenticated } = useAuth();
   const [location] = useLocation();
 
-  if (isAuthenticated && location === "/login") {
+  if (isAuthenticated && (location === "/login" || location === "/register")) {
     return <Redirect to="/dashboard" />;
   }
 
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
       <Route path="/">
         {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}
       </Route>
