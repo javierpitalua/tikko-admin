@@ -13,7 +13,8 @@ import { Ticket, User, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react"
 
 const registerSchema = z.object({
   nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-  apellido: z.string().min(2, "El apellido debe tener al menos 2 caracteres"),
+  apellidoPaterno: z.string().min(2, "El apellido paterno debe tener al menos 2 caracteres"),
+  apellidoMaterno: z.string().min(2, "El apellido materno debe tener al menos 2 caracteres"),
   correo: z.string().email("Ingresa un correo electrónico válido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
@@ -28,7 +29,7 @@ export default function RegisterPage() {
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { nombre: "", apellido: "", correo: "", password: "" },
+    defaultValues: { nombre: "", apellidoPaterno: "", apellidoMaterno: "", correo: "", password: "" },
   });
 
   async function onSubmit(data: RegisterInput) {
@@ -37,7 +38,8 @@ export default function RegisterPage() {
     try {
       const result = await UsuariosService.postApiV1UsuariosCreate({
         nombre: data.nombre,
-        apellidoPaterno: data.apellido,
+        apellidoPaterno: data.apellidoPaterno,
+        apellidoMaterno: data.apellidoMaterno,
         correoElectronico: data.correo,
         password: data.password,
         habilitado: true,
@@ -93,21 +95,42 @@ export default function RegisterPage() {
                     {error}
                   </div>
                 )}
+                <FormField
+                  control={form.control}
+                  name="nombre"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nombre</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+                          <Input
+                            {...field}
+                            placeholder="Tu nombre"
+                            className="pl-11 h-11 rounded-xl bg-accent/40 border-border/60 focus:bg-background transition-colors"
+                            data-testid="input-nombre"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="nombre"
+                    name="apellidoPaterno"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Nombre</FormLabel>
+                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Apellido Paterno</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
                             <Input
                               {...field}
-                              placeholder="Tu nombre"
+                              placeholder="Apellido paterno"
                               className="pl-11 h-11 rounded-xl bg-accent/40 border-border/60 focus:bg-background transition-colors"
-                              data-testid="input-nombre"
+                              data-testid="input-apellido-paterno"
                             />
                           </div>
                         </FormControl>
@@ -117,18 +140,18 @@ export default function RegisterPage() {
                   />
                   <FormField
                     control={form.control}
-                    name="apellido"
+                    name="apellidoMaterno"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Apellido</FormLabel>
+                        <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Apellido Materno</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
                             <Input
                               {...field}
-                              placeholder="Tu apellido"
+                              placeholder="Apellido materno"
                               className="pl-11 h-11 rounded-xl bg-accent/40 border-border/60 focus:bg-background transition-colors"
-                              data-testid="input-apellido"
+                              data-testid="input-apellido-materno"
                             />
                           </div>
                         </FormControl>
