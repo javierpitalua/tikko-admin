@@ -2518,10 +2518,6 @@
       "CreateEventoRequest": {
         "type": "object",
         "properties": {
-          "estadoDeEventoId": {
-            "type": "integer",
-            "format": "int32"
-          },
           "ubicacionId": {
             "type": "integer",
             "format": "int32"
@@ -2956,10 +2952,6 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "estadoDeEventoId": {
             "type": "integer",
             "format": "int32"
           },

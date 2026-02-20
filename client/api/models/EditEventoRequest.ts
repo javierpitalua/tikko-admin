@@ -4,7 +4,6 @@
 /* eslint-disable */
 export type EditEventoRequest = {
     id?: number;
-    estadoDeEventoId?: number;
     ubicacionId?: number;
     tipoDeCategoriaEventoId?: number;
     nombre?: string | null;
