@@ -206,7 +206,7 @@ export default function EventDetailPage() {
     setNotFound(false);
 
     Promise.all([
-      EventosService.getApiV1EventosList(undefined, undefined, undefined, undefined, numericId),
+      EventosService.getApiV1EventosList(undefined, undefined, undefined, undefined, undefined, numericId),
       TiposDeCategoriaEventoService.getApiV1TiposDeCategoriaEventoList().catch(() => ({ items: [] })),
       UbicacionesService.getApiV1UbicacionesList().catch(() => ({ items: [] })),
       ActividadesEventoService.getApiV1ActividadesEventoList(numericId).catch(() => ({ items: [] })),
@@ -912,7 +912,7 @@ export default function EventDetailPage() {
     const numericId = Number(event.id);
     setPreviewLoading(true);
     Promise.all([
-      EventosService.getApiV1EventosList(undefined, undefined, undefined, undefined, numericId).catch(() => ({ items: [] })),
+      EventosService.getApiV1EventosList(undefined, undefined, undefined, undefined, undefined, numericId).catch(() => ({ items: [] })),
       ActividadesEventoService.getApiV1ActividadesEventoList(numericId).catch(() => ({ items: [] })),
       ZonasEventoService.getApiV1ZonasEventoList(numericId).catch(() => ({ items: [] })),
       ProductosAdicionalEventoService.getApiV1ProductosAdicionalEventoList(numericId).catch(() => ({ items: [] })),
