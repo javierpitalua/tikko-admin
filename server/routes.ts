@@ -1,6 +1,5 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { createProxyMiddleware } from "http-proxy-middleware";
 import { log } from "./index";
 
 const API_BASE = "https://dev-api.tikko.mx";
@@ -124,20 +123,65 @@ async function expireReservations() {
   }
 }
 
+async function proxyToApi(req: Request, res: Response) {
+  const url = `${API_BASE}${req.originalUrl}`;
+  const headers: Record<string, string> = {
+    "Content-Type": req.headers["content-type"] || "application/json",
+  };
+  if (req.headers["authorization"]) {
+    headers["Authorization"] = req.headers["authorization"] as string;
+  }
+
+  try {
+    const isMultipart = (req.headers["content-type"] || "").includes("multipart");
+    let body: any = undefined;
+
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      if (isMultipart) {
+        const rawRes = await fetch(url, {
+          method: req.method,
+          headers: { Authorization: headers["Authorization"] || "" },
+          body: req.rawBody as Buffer,
+          duplex: "half",
+        } as any);
+        const data = await rawRes.text();
+        res.status(rawRes.status);
+        rawRes.headers.forEach((v, k) => {
+          if (k.toLowerCase() !== "transfer-encoding") res.setHeader(k, v);
+        });
+        return res.send(data);
+      }
+      body = JSON.stringify(req.body);
+    }
+
+    const apiRes = await fetch(url, {
+      method: req.method,
+      headers,
+      body,
+    });
+
+    const data = await apiRes.text();
+    res.status(apiRes.status);
+    apiRes.headers.forEach((v, k) => {
+      if (k.toLowerCase() !== "transfer-encoding") res.setHeader(k, v);
+    });
+    res.send(data);
+  } catch (err: any) {
+    log(`Proxy error: ${err.message}`, "proxy");
+    res.status(502).json({ message: "Error connecting to API" });
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  app.use(
-    "/api",
-    createProxyMiddleware({
-      target: API_BASE,
-      changeOrigin: true,
-      pathFilter: (path) => {
-        return path.startsWith("/api/v1/") || path.startsWith("/api/Archivos/");
-      },
-    })
-  );
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/api/v1/") || req.path.startsWith("/api/Archivos/")) {
+      return proxyToApi(req, res);
+    }
+    next();
+  });
 
   expireReservations();
   setInterval(expireReservations, 10 * 60 * 1000);
