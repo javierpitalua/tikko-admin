@@ -5,6 +5,7 @@
 export type CreateEventoRequest = {
     ubicacionId?: number;
     tipoDeCategoriaEventoId?: number;
+    archivoId?: number | null;
     nombre?: string | null;
     descripcion?: string | null;
     fechaInicio?: string;

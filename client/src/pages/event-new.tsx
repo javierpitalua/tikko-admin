@@ -112,8 +112,8 @@ export default function EventNewPage() {
         fechaFin: new Date(data.endDate + "T23:59:59").toISOString(),
         ubicacionId: Number(data.ubicacionId),
         tipoDeCategoriaEventoId: Number(data.tipoDeCategoriaEventoId),
-        archivoId: archivoId,
-      } as any);
+        archivoId: archivoId ?? undefined,
+      });
 
       if (result.ok) {
         toast({ title: "Evento creado exitosamente" });
