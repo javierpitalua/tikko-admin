@@ -12,15 +12,25 @@ declare module "http" {
   }
 }
 
-app.use(
+app.use((req, res, next) => {
+  const ct = (req.headers["content-type"] || "").toLowerCase();
+  if (ct.includes("multipart")) {
+    return next();
+  }
   express.json({
-    verify: (req, _res, buf) => {
-      req.rawBody = buf;
+    verify: (innerReq, _res, buf) => {
+      innerReq.rawBody = buf;
     },
-  }),
-);
+  })(req, res, next);
+});
 
-app.use(express.urlencoded({ extended: false }));
+app.use((req, res, next) => {
+  const ct = (req.headers["content-type"] || "").toLowerCase();
+  if (ct.includes("multipart")) {
+    return next();
+  }
+  express.urlencoded({ extended: false })(req, res, next);
+});
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {

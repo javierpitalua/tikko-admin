@@ -123,42 +123,51 @@ async function expireReservations() {
   }
 }
 
+function collectRawBody(req: Request): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk: Buffer) => chunks.push(chunk));
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
+
 async function proxyToApi(req: Request, res: Response) {
   const url = `${API_BASE}${req.originalUrl}`;
-  const headers: Record<string, string> = {
-    "Content-Type": req.headers["content-type"] || "application/json",
-  };
+  const isMultipart = (req.headers["content-type"] || "").includes("multipart");
+
+  const headers: Record<string, string> = {};
+  if (req.headers["content-type"]) {
+    headers["Content-Type"] = req.headers["content-type"];
+  }
   if (req.headers["authorization"]) {
     headers["Authorization"] = req.headers["authorization"] as string;
   }
 
   try {
-    const isMultipart = (req.headers["content-type"] || "").includes("multipart");
     let body: any = undefined;
 
     if (req.method !== "GET" && req.method !== "HEAD") {
       if (isMultipart) {
-        const rawRes = await fetch(url, {
-          method: req.method,
-          headers: { Authorization: headers["Authorization"] || "" },
-          body: req.rawBody as Buffer,
-          duplex: "half",
-        } as any);
-        const data = await rawRes.text();
-        res.status(rawRes.status);
-        rawRes.headers.forEach((v, k) => {
-          if (k.toLowerCase() !== "transfer-encoding") res.setHeader(k, v);
-        });
-        return res.send(data);
+        body = await collectRawBody(req);
+      } else {
+        body = JSON.stringify(req.body);
+        if (!headers["Content-Type"]) {
+          headers["Content-Type"] = "application/json";
+        }
       }
-      body = JSON.stringify(req.body);
     }
 
-    const apiRes = await fetch(url, {
+    const fetchOptions: any = {
       method: req.method,
       headers,
       body,
-    });
+    };
+    if (isMultipart && body) {
+      fetchOptions.duplex = "half";
+    }
+
+    const apiRes = await fetch(url, fetchOptions);
 
     const data = await apiRes.text();
     res.status(apiRes.status);
