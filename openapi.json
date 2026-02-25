@@ -368,6 +368,29 @@
         }
       }
     },
+    "/api/archivos/{id}/download": {
+      "get": {
+        "tags": [
+          "Archivos"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/archivos/upload": {
       "post": {
         "tags": [
@@ -3252,6 +3275,11 @@
           },
           "ubicacion": {
             "type": "string",
+            "nullable": true
+          },
+          "archivoDownloadId": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },

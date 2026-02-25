@@ -60,4 +60,20 @@ export class ArchivosService {
             },
         });
     }
+    /**
+     * @param id
+     * @returns any OK
+     * @throws ApiError
+     */
+    public static getApiArchivosDownload(
+        id: number,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/archivos/{id}/download',
+            path: {
+                'id': id,
+            },
+        });
+    }
 }
