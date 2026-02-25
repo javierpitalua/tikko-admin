@@ -333,6 +333,26 @@ export default function EventDetailPage() {
 
     setSaving(true);
 
+    let finalArchivoId = archivoId;
+    const isNewImage = draft.image && draft.image.startsWith("data:");
+
+    if (isNewImage && !finalArchivoId) {
+      try {
+        const base64Response = await fetch(draft.image);
+        const blob = await base64Response.blob();
+        const uploadResult = await ArchivosUploadService.postApiArchivosUpload({
+          File: blob,
+          UsuarioId: admin?.id || 0,
+        });
+        finalArchivoId = uploadResult.id;
+        setArchivoId(finalArchivoId);
+      } catch (err: any) {
+        toast({ title: "Error al subir la imagen", description: err?.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+    }
+
     const requestBody: any = {
       id: Number(event.id),
       nombre: draft.name.trim(),
@@ -342,7 +362,7 @@ export default function EventDetailPage() {
       ubicacionId: Number(draft.ubicacionId),
       tipoDeCategoriaEventoId: Number(draft.tipoDeCategoriaEventoId),
       estadoDeEventoId: apiItem.estadoDeEventoId,
-      archivoId: archivoId,
+      archivoId: finalArchivoId ?? undefined,
     };
 
     EventosService.postApiV1EventosEdit(requestBody)
@@ -359,6 +379,10 @@ export default function EventDetailPage() {
         const selectedLocation = locations.find((l) => l.id === Number(draft.ubicacionId));
         const selectedCategory = categories.find((c) => c.id === Number(draft.tipoDeCategoriaEventoId));
 
+        const imageUrl = finalArchivoId
+          ? `/api/Archivos/Download/${finalArchivoId}`
+          : event.image;
+
         const updated: Event = {
           ...event,
           name: draft.name.trim(),
@@ -367,21 +391,20 @@ export default function EventDetailPage() {
           location: selectedLocation?.nombre || event.location,
           category: selectedCategory?.nombre || event.category,
           description: draft.description.trim(),
-          image: draft.image,
+          image: imageUrl,
         };
         setEvent(updated);
-        setArchivoId(null);
         setApiItem({
           ...apiItem,
           nombre: updated.name,
           descripcion: updated.description,
-          bannerUrl: updated.image,
           fechaInicio: draft.startDate,
           fechaFin: draft.endDate,
           ubicacionId: Number(draft.ubicacionId),
           tipoDeCategoriaEventoId: Number(draft.tipoDeCategoriaEventoId),
           ubicacion: selectedLocation?.nombre || null,
           tipoDeCategoriaEvento: selectedCategory?.nombre || null,
+          archivoId: finalArchivoId ?? apiItem.archivoId,
         });
         setEditing(false);
         toast({ title: "Evento actualizado correctamente" });
@@ -495,12 +518,12 @@ export default function EventDetailPage() {
       id: Number(event.id),
       nombre: currentName,
       descripcion: currentDesc,
-      bannerUrl: currentImage || null,
       fechaInicio: new Date(currentStartDate + "T00:00:00").toISOString(),
       fechaFin: new Date(currentEndDate + "T23:59:59").toISOString(),
       ubicacionId: currentUbicacionId,
       tipoDeCategoriaEventoId: currentCategoriaId,
       estadoDeEventoId: statusId,
+      archivoId: archivoId ?? apiItem.archivoId ?? undefined,
     };
 
     EventosService.postApiV1EventosEdit(requestBody)
@@ -534,7 +557,6 @@ export default function EventDetailPage() {
           ...apiItem,
           nombre: updated.name,
           descripcion: updated.description,
-          bannerUrl: updated.image,
           fechaInicio: currentStartDate,
           fechaFin: currentEndDate,
           ubicacionId: currentUbicacionId,
@@ -1272,9 +1294,9 @@ export default function EventDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-3 pt-2 flex-wrap">
-                  <Button onClick={saveBasicInfo} disabled={saving} className="rounded-xl" data-testid="button-save-event">
-                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    {saving ? "Guardando..." : "Guardar Cambios"}
+                  <Button onClick={saveBasicInfo} disabled={saving || uploadingImage} className="rounded-xl" data-testid="button-save-event">
+                    {saving || uploadingImage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    {uploadingImage ? "Subiendo imagen..." : saving ? "Guardando..." : "Guardar Cambios"}
                   </Button>
                   <Button variant="outline" onClick={cancelEditing} disabled={saving} className="rounded-xl" data-testid="button-cancel-edit">
                     Cancelar
