@@ -295,9 +295,9 @@ export default function EventNewPage() {
                     </FormItem>
                   )} />
 
-                  <Button type="submit" disabled={submitting} className="w-full rounded-xl" data-testid="button-create-event">
-                    {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    {submitting ? "Creando..." : "Crear Evento"}
+                  <Button type="submit" disabled={submitting || uploadingImage} className="w-full rounded-xl" data-testid="button-create-event">
+                    {submitting || uploadingImage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    {uploadingImage ? "Subiendo imagen..." : submitting ? "Creando..." : "Crear Evento"}
                   </Button>
                 </form>
               </Form>
