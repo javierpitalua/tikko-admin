@@ -4,6 +4,7 @@ import { getEvents, saveEvents, generateId } from "@/lib/store";
 import { useAuth } from "@/lib/auth-context";
 import { EventosService } from "../../api/services/EventosService";
 import { ArchivosUploadService } from "../../api/services/ArchivosUploadService";
+import { ArchivosService } from "../../api/services/ArchivosService";
 import { ActividadesEventoService } from "../../api/services/ActividadesEventoService";
 import { ZonasEventoService } from "../../api/services/ZonasEventoService";
 import { ProductosAdicionalEventoService } from "../../api/services/ProductosAdicionalEventoService";
@@ -183,7 +184,7 @@ export default function EventDetailPage() {
       endDate: item.fechaFin ? item.fechaFin.split("T")[0] : "",
       location: item.ubicacion || "",
       description: item.descripcion || "",
-      image: item.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&h=400&fit=crop",
+      image: item.bannerUrl || "",
       category: item.tipoDeCategoriaEvento || "",
       status,
       zones: [],
@@ -220,7 +221,17 @@ export default function EventDetailPage() {
         if (items.length > 0) {
           const raw = items[0];
           setApiItem(raw);
-          if (raw.archivoId) setArchivoId(raw.archivoId);
+          if (raw.archivoId) {
+            setArchivoId(raw.archivoId);
+            ArchivosService.getApiV1ArchivosList(undefined, raw.archivoId)
+              .then((archRes) => {
+                const archItem = archRes.items?.[0];
+                if (archItem?.url) {
+                  setDraft((prev) => ({ ...prev, image: archItem.url! }));
+                }
+              })
+              .catch(() => {});
+          }
           const found = mapApiEventToLocal(raw);
           const activities = mapApiActivitiesToLocal((actRes as any).items || []);
           const zones = mapApiZonesToLocal((zonRes as any).items || []);
@@ -409,7 +420,10 @@ export default function EventDetailPage() {
 
     setUploadingImage(true);
     try {
-      const result = await ArchivosUploadService.postApiArchivosUpload(file, admin?.id || 0);
+      const result = await ArchivosUploadService.postApiArchivosUpload({
+        File: file,
+        UsuarioId: admin?.id || 0,
+      });
       setArchivoId(result.id);
       toast({ title: "Imagen subida correctamente" });
     } catch (err: any) {

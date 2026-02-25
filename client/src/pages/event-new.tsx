@@ -90,7 +90,10 @@ export default function EventNewPage() {
 
     setUploadingImage(true);
     try {
-      const result = await ArchivosUploadService.postApiArchivosUpload(file, admin.id);
+      const result = await ArchivosUploadService.postApiArchivosUpload({
+        File: file,
+        UsuarioId: admin.id,
+      });
       setArchivoId(result.id);
       toast({ title: "Imagen subida correctamente" });
     } catch (err: any) {
