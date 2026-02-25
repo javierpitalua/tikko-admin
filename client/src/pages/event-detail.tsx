@@ -420,7 +420,7 @@ export default function EventDetailPage() {
         File: file,
         UsuarioId: admin?.id || 0,
       });
-      setArchivoId(result.id);
+      setArchivoId(Number(result.operationId));
       toast({ title: "Imagen subida correctamente" });
     } catch (err: any) {
       toast({ title: "Error al subir la imagen", description: err?.message, variant: "destructive" });

@@ -94,7 +94,7 @@ export default function EventNewPage() {
         File: file,
         UsuarioId: admin.id,
       });
-      setArchivoId(result.id);
+      setArchivoId(Number(result.operationId));
       toast({ title: "Imagen subida correctamente" });
     } catch (err: any) {
       toast({ title: "Error al subir la imagen", description: err?.message, variant: "destructive" });
