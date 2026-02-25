@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { EventosService } from "../../api/services/EventosService";
-import { ArchivosService } from "../../api/services/ArchivosService";
 import type { EventosListItem } from "../../api/models/EventosListItem";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +25,10 @@ function mapEstadoToKey(estado?: string | null): string {
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&h=400&fit=crop";
 
+function getArchivoDownloadUrl(archivoId: number): string {
+  return `/api/Archivos/Download/${archivoId}`;
+}
+
 export default function EventsPage() {
   const [, navigate] = useLocation();
   const [events, setEvents] = useState<EventosListItem[]>([]);
@@ -33,40 +36,13 @@ export default function EventsPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
 
   useEffect(() => {
     setLoading(true);
     EventosService.getApiV1EventosList()
       .then((res) => {
-        const items = res.items || [];
-        setEvents(items);
+        setEvents(res.items || []);
         setError("");
-
-        const archivoIds = items
-          .filter((e) => e.archivoId != null)
-          .map((e) => e.archivoId as number);
-        const uniqueIds = [...new Set(archivoIds)];
-
-        if (uniqueIds.length > 0) {
-          Promise.all(
-            uniqueIds.map((id) =>
-              ArchivosService.getApiV1ArchivosList(undefined, id)
-                .then((archRes) => {
-                  const item = archRes.items?.[0];
-                  if (item?.url) return { id, url: item.url };
-                  return null;
-                })
-                .catch(() => null)
-            )
-          ).then((results) => {
-            const urls: Record<number, string> = {};
-            results.forEach((r) => {
-              if (r) urls[r.id] = r.url;
-            });
-            setImageUrls(urls);
-          });
-        }
       })
       .catch((err) => {
         setError("Error al cargar los eventos");
@@ -143,7 +119,7 @@ export default function EventsPage() {
             const statusKey = mapEstadoToKey(event.estadoDeEvento);
             const startDate = event.fechaInicio ? new Date(event.fechaInicio) : null;
             const endDate = event.fechaFin ? new Date(event.fechaFin) : null;
-            const imageUrl = (event.archivoId && imageUrls[event.archivoId]) || PLACEHOLDER_IMAGE;
+            const imageUrl = event.archivoId ? getArchivoDownloadUrl(event.archivoId) : PLACEHOLDER_IMAGE;
 
             return (
               <Card

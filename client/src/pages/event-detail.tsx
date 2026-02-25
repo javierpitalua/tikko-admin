@@ -4,7 +4,6 @@ import { getEvents, saveEvents, generateId } from "@/lib/store";
 import { useAuth } from "@/lib/auth-context";
 import { EventosService } from "../../api/services/EventosService";
 import { ArchivosUploadService } from "../../api/services/ArchivosUploadService";
-import { ArchivosService } from "../../api/services/ArchivosService";
 import { ActividadesEventoService } from "../../api/services/ActividadesEventoService";
 import { ZonasEventoService } from "../../api/services/ZonasEventoService";
 import { ProductosAdicionalEventoService } from "../../api/services/ProductosAdicionalEventoService";
@@ -184,7 +183,7 @@ export default function EventDetailPage() {
       endDate: item.fechaFin ? item.fechaFin.split("T")[0] : "",
       location: item.ubicacion || "",
       description: item.descripcion || "",
-      image: item.bannerUrl || "",
+      image: item.archivoId ? `/api/Archivos/Download/${item.archivoId}` : (item.bannerUrl || ""),
       category: item.tipoDeCategoriaEvento || "",
       status,
       zones: [],
@@ -223,14 +222,6 @@ export default function EventDetailPage() {
           setApiItem(raw);
           if (raw.archivoId) {
             setArchivoId(raw.archivoId);
-            ArchivosService.getApiV1ArchivosList(undefined, raw.archivoId)
-              .then((archRes) => {
-                const archItem = archRes.items?.[0];
-                if (archItem?.url) {
-                  setDraft((prev) => ({ ...prev, image: archItem.url! }));
-                }
-              })
-              .catch(() => {});
           }
           const found = mapApiEventToLocal(raw);
           const activities = mapApiActivitiesToLocal((actRes as any).items || []);
