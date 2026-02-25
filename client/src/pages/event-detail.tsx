@@ -333,25 +333,7 @@ export default function EventDetailPage() {
 
     setSaving(true);
 
-    let finalArchivoId = archivoId;
-    const isNewImage = draft.image && draft.image.startsWith("data:");
-
-    if (isNewImage && !finalArchivoId) {
-      try {
-        const base64Response = await fetch(draft.image);
-        const blob = await base64Response.blob();
-        const uploadResult = await ArchivosUploadService.postApiArchivosUpload({
-          File: blob,
-          UsuarioId: admin?.id || 0,
-        });
-        finalArchivoId = uploadResult.id;
-        setArchivoId(finalArchivoId);
-      } catch (err: any) {
-        toast({ title: "Error al subir la imagen", description: err?.message, variant: "destructive" });
-        setSaving(false);
-        return;
-      }
-    }
+    const finalArchivoId = archivoId ?? apiItem.archivoId ?? undefined;
 
     const requestBody: any = {
       id: Number(event.id),
@@ -362,7 +344,7 @@ export default function EventDetailPage() {
       ubicacionId: Number(draft.ubicacionId),
       tipoDeCategoriaEventoId: Number(draft.tipoDeCategoriaEventoId),
       estadoDeEventoId: apiItem.estadoDeEventoId,
-      archivoId: finalArchivoId ?? undefined,
+      archivoId: finalArchivoId,
     };
 
     EventosService.postApiV1EventosEdit(requestBody)
@@ -404,7 +386,7 @@ export default function EventDetailPage() {
           tipoDeCategoriaEventoId: Number(draft.tipoDeCategoriaEventoId),
           ubicacion: selectedLocation?.nombre || null,
           tipoDeCategoriaEvento: selectedCategory?.nombre || null,
-          archivoId: finalArchivoId ?? apiItem.archivoId,
+          archivoId: finalArchivoId,
         });
         setEditing(false);
         toast({ title: "Evento actualizado correctamente" });
