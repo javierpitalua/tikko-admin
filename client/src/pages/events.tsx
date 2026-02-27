@@ -115,7 +115,7 @@ export default function EventsPage() {
             const statusKey = mapEstadoToKey(event.estadoDeEvento);
             const startDate = event.fechaInicio ? new Date(event.fechaInicio) : null;
             const endDate = event.fechaFin ? new Date(event.fechaFin) : null;
-            const imageUrl = event.archivo || PLACEHOLDER_IMAGE;
+            const imageUrl = event.imagen_Evento_Id ? `https://dev-api.tikko.mx${event.imagen_Evento_Id}` : PLACEHOLDER_IMAGE;
 
             return (
               <Card

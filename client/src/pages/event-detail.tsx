@@ -183,7 +183,7 @@ export default function EventDetailPage() {
       endDate: item.fechaFin ? item.fechaFin.split("T")[0] : "",
       location: item.ubicacion || "",
       description: item.descripcion || "",
-      image: item.archivo || item.bannerUrl || "",
+      image: item.imagen_Evento_Id ? `https://dev-api.tikko.mx${item.imagen_Evento_Id}` : (item.bannerUrl || ""),
       category: item.tipoDeCategoriaEvento || "",
       status,
       zones: [],
