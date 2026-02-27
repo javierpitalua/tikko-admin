@@ -37,11 +37,6 @@ import {
   Send, Eye, Loader2, CheckCircle, Lock,
 } from "lucide-react";
 
-function getArchivoDownloadUrl(archivoId: number): string {
-  const token = localStorage.getItem("tikko_token") || "";
-  return `/api/Archivos/Download/${archivoId}?token=${encodeURIComponent(token)}`;
-}
-
 const CATEGORIES = ["Música", "Tecnología", "Deportes", "Gastronomía", "Cultura", "Teatro", "Arte", "Otro"];
 
 export default function EventDetailPage() {
@@ -188,7 +183,7 @@ export default function EventDetailPage() {
       endDate: item.fechaFin ? item.fechaFin.split("T")[0] : "",
       location: item.ubicacion || "",
       description: item.descripcion || "",
-      image: item.archivoId ? getArchivoDownloadUrl(item.archivoId) : (item.bannerUrl || ""),
+      image: item.archivo || item.bannerUrl || "",
       category: item.tipoDeCategoriaEvento || "",
       status,
       zones: [],
@@ -366,8 +361,8 @@ export default function EventDetailPage() {
         const selectedLocation = locations.find((l) => l.id === Number(draft.ubicacionId));
         const selectedCategory = categories.find((c) => c.id === Number(draft.tipoDeCategoriaEventoId));
 
-        const imageUrl = finalArchivoId
-          ? getArchivoDownloadUrl(finalArchivoId)
+        const imageUrl = draft.image && !draft.image.startsWith("data:")
+          ? draft.image
           : event.image;
 
         const updated: Event = {

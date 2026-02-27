@@ -25,11 +25,6 @@ function mapEstadoToKey(estado?: string | null): string {
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&h=400&fit=crop";
 
-function getArchivoDownloadUrl(archivoId: number): string {
-  const token = localStorage.getItem("tikko_token") || "";
-  return `/api/Archivos/Download/${archivoId}?token=${encodeURIComponent(token)}`;
-}
-
 export default function EventsPage() {
   const [, navigate] = useLocation();
   const [events, setEvents] = useState<EventosListItem[]>([]);
@@ -120,7 +115,7 @@ export default function EventsPage() {
             const statusKey = mapEstadoToKey(event.estadoDeEvento);
             const startDate = event.fechaInicio ? new Date(event.fechaInicio) : null;
             const endDate = event.fechaFin ? new Date(event.fechaFin) : null;
-            const imageUrl = event.archivoId ? getArchivoDownloadUrl(event.archivoId) : PLACEHOLDER_IMAGE;
+            const imageUrl = event.archivo || PLACEHOLDER_IMAGE;
 
             return (
               <Card
