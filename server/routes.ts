@@ -133,7 +133,6 @@ function collectRawBody(req: Request): Promise<Buffer> {
 }
 
 async function proxyToApi(req: Request, res: Response) {
-  const url = `${API_BASE}${req.originalUrl}`;
   const isMultipart = (req.headers["content-type"] || "").includes("multipart");
 
   const headers: Record<string, string> = {};
@@ -143,6 +142,21 @@ async function proxyToApi(req: Request, res: Response) {
   if (req.headers["authorization"]) {
     headers["Authorization"] = req.headers["authorization"] as string;
   }
+
+  const tokenParam = req.query.token as string | undefined;
+  if (tokenParam && !headers["Authorization"]) {
+    headers["Authorization"] = `Bearer ${tokenParam}`;
+  }
+
+  const apiPath = req.originalUrl.split("?")[0];
+  const queryParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(req.query)) {
+    if (key !== "token" && typeof value === "string") {
+      queryParams.set(key, value);
+    }
+  }
+  const queryString = queryParams.toString();
+  const url = `${API_BASE}${apiPath}${queryString ? "?" + queryString : ""}`;
 
   try {
     let body: any = undefined;
@@ -169,12 +183,21 @@ async function proxyToApi(req: Request, res: Response) {
 
     const apiRes = await fetch(url, fetchOptions);
 
-    const data = await apiRes.text();
+    const contentType = apiRes.headers.get("content-type") || "";
+    const isBinary = contentType.startsWith("image/") || contentType.startsWith("application/octet-stream");
+
     res.status(apiRes.status);
     apiRes.headers.forEach((v, k) => {
       if (k.toLowerCase() !== "transfer-encoding") res.setHeader(k, v);
     });
-    res.send(data);
+
+    if (isBinary) {
+      const buffer = Buffer.from(await apiRes.arrayBuffer());
+      res.send(buffer);
+    } else {
+      const data = await apiRes.text();
+      res.send(data);
+    }
   } catch (err: any) {
     log(`Proxy error: ${err.message}`, "proxy");
     res.status(502).json({ message: "Error connecting to API" });

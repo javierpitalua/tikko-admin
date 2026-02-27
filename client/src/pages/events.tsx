@@ -26,7 +26,8 @@ function mapEstadoToKey(estado?: string | null): string {
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&h=400&fit=crop";
 
 function getArchivoDownloadUrl(archivoId: number): string {
-  return `/api/Archivos/Download/${archivoId}`;
+  const token = localStorage.getItem("tikko_token") || "";
+  return `/api/Archivos/Download/${archivoId}?token=${encodeURIComponent(token)}`;
 }
 
 export default function EventsPage() {
