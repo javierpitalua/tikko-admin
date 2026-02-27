@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
 import { z } from "zod";
-import { UsuariosService } from "../../api/services/UsuariosService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,30 +35,31 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      const result = await UsuariosService.postApiV1UsuariosCreate({
-        nombre: data.nombre,
-        apellidoPaterno: data.apellidoPaterno,
-        apellidoMaterno: data.apellidoMaterno,
-        correoElectronico: data.correo,
-        password: data.password,
-        habilitado: true,
+      const res = await fetch("/internal/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: data.nombre,
+          apellidoPaterno: data.apellidoPaterno,
+          apellidoMaterno: data.apellidoMaterno,
+          correoElectronico: data.correo,
+          password: data.password,
+          habilitado: true,
+        }),
       });
+      const result = await res.json();
       if (result.ok) {
         toast({ title: "Cuenta creada exitosamente. Ahora puedes iniciar sesión." });
         navigate("/login");
       } else {
-        const errors = (result as any).validationSummary?.errors;
+        const errors = result?.validationSummary?.errors;
         const msg = errors && errors.length > 0
           ? errors.map((e: any) => e.description || e.errorMessage || "").filter(Boolean).join(", ")
-          : "Error al crear la cuenta";
+          : result?.message || "Error al crear la cuenta";
         setError(msg);
       }
     } catch (err: any) {
-      const msg = err?.body?.validationSummary?.errors?.[0]?.description
-        || err?.body?.validationSummary?.errorMessage
-        || err?.message
-        || "Error de conexión";
-      setError(msg);
+      setError(err?.message || "Error de conexión");
     } finally {
       setLoading(false);
     }
