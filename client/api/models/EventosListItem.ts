@@ -22,5 +22,6 @@ export type EventosListItem = {
     tipoDeCategoriaEvento?: string | null;
     ubicacion?: string | null;
     archivoDownloadId?: number | null;
+    imagen_Evento_Id?: string | null;
 };
 

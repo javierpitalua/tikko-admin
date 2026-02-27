@@ -3281,6 +3281,10 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "imagen_Evento_Id": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
