@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import { UsuariosService } from "../../api/services/UsuariosService";
+import { OpenAPI } from "../../api/core/OpenAPI";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,14 +37,21 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      const result = await UsuariosService.postApiV1UsuariosCreate({
-        nombre: data.nombre,
-        apellidoPaterno: data.apellidoPaterno,
-        apellidoMaterno: data.apellidoMaterno,
-        correoElectronico: data.correo,
-        password: data.password,
-        habilitado: true,
-      });
+      const prevToken = OpenAPI.TOKEN;
+      OpenAPI.TOKEN = undefined;
+      let result;
+      try {
+        result = await UsuariosService.postApiV1UsuariosCreate({
+          nombre: data.nombre,
+          apellidoPaterno: data.apellidoPaterno,
+          apellidoMaterno: data.apellidoMaterno,
+          correoElectronico: data.correo,
+          password: data.password,
+          habilitado: true,
+        });
+      } finally {
+        OpenAPI.TOKEN = prevToken;
+      }
       if (result.ok) {
         toast({ title: "Cuenta creada exitosamente. Ahora puedes iniciar sesión." });
         navigate("/login");
