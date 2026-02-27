@@ -228,67 +228,51 @@ export default function DashboardPage() {
 
             <div className="space-y-4">
               <h2 className="text-base font-semibold text-foreground">Próximos Eventos</h2>
-              {upcomingEvents.length === 0 ? (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent mb-3">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
+              <Card>
+                <CardContent className="p-2">
+                  {upcomingEvents.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent mb-3">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <p className="text-xs text-muted-foreground text-center">No hay eventos próximos</p>
                     </div>
-                    <p className="text-xs text-muted-foreground text-center">No hay eventos próximos</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {upcomingEvents.map((evt) => {
-                    const days = evt.fechaInicio ? daysUntil(evt.fechaInicio) : null;
-                    const imgUrl = evt.imagen_Evento_Id
-                      ? `https://dev-api.tikko.mx${evt.imagen_Evento_Id}`
-                      : null;
-                    return (
-                      <Card
-                        key={evt.id}
-                        className="hover-elevate cursor-pointer"
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(`/events/${evt.id}`); }}
-                        onClick={() => navigate(`/events/${evt.id}`)}
-                        data-testid={`upcoming-event-${evt.id}`}
-                      >
-                        <CardContent className="p-0">
-                          <div className="aspect-[2/1] overflow-hidden rounded-t-md bg-accent relative">
-                            {imgUrl ? (
-                              <img src={imgUrl} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-violet-500/20 dark:from-indigo-500/10 dark:to-violet-500/10">
-                                <Ticket className="w-8 h-8 text-muted-foreground/50" />
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {upcomingEvents.map((evt) => {
+                        const days = evt.fechaInicio ? daysUntil(evt.fechaInicio) : null;
+                        return (
+                          <div
+                            key={evt.id}
+                            className="flex items-center justify-between gap-3 px-3 py-3 rounded-lg hover-elevate cursor-pointer"
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(`/events/${evt.id}`); }}
+                            onClick={() => navigate(`/events/${evt.id}`)}
+                            data-testid={`upcoming-event-${evt.id}`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium truncate">{evt.nombre}</p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
+                                <span className="text-xs text-muted-foreground">
+                                  {evt.fechaInicio ? formatDateShort(evt.fechaInicio) : "Sin fecha"}
+                                  {days !== null && days > 0 && (
+                                    <span className="ml-1.5 text-muted-foreground/70">
+                                      · {days === 1 ? "Mañana" : `En ${days} días`}
+                                    </span>
+                                  )}
+                                </span>
                               </div>
-                            )}
-                            {days !== null && days > 0 && (
-                              <div className="absolute top-2 right-2">
-                                <Badge variant="secondary" className="text-[10px] bg-background/70 dark:bg-background/60 border-0 backdrop-blur-sm">
-                                  {days === 1 ? "Mañana" : `En ${days} días`}
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-3.5">
-                            <p className="text-sm font-medium truncate">{evt.nombre}</p>
-                            <div className="flex items-center gap-1.5 mt-1.5">
-                              <Calendar className="w-3 h-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">
-                                {evt.fechaInicio ? formatDateShort(evt.fechaInicio) : "Sin fecha"}
-                              </span>
                             </div>
-                            {evt.tipoDeCategoriaEvento && (
-                              <Badge variant="secondary" className="text-[10px] mt-2">{evt.tipoDeCategoriaEvento}</Badge>
-                            )}
+                            <ArrowUpRight className="w-4 h-4 text-muted-foreground shrink-0" />
                           </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </>
