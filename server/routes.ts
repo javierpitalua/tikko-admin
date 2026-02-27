@@ -208,35 +208,6 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  app.post("/internal/register", async (req: Request, res: Response) => {
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        res.status(500).json({ ok: false, message: "No se pudo obtener autorización del servidor" });
-        return;
-      }
-
-      const apiRes = await fetch(`${API_BASE}/api/v1/Usuarios/Create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(req.body),
-      });
-
-      const data = await apiRes.text();
-      res.status(apiRes.status);
-      apiRes.headers.forEach((v, k) => {
-        if (k.toLowerCase() !== "transfer-encoding") res.setHeader(k, v);
-      });
-      res.send(data);
-    } catch (err: any) {
-      log(`Register error: ${err.message}`, "register");
-      res.status(502).json({ ok: false, message: "Error de conexión con el servidor" });
-    }
-  });
-
   app.use((req, res, next) => {
     const lowerPath = req.path.toLowerCase();
     if (lowerPath.startsWith("/api/v1/") || lowerPath.startsWith("/api/archivos/")) {
