@@ -46,11 +46,17 @@ Event management dashboard (boletera) built with React, TypeScript, and Shadcn U
 ## Project Structure
 - `client/api/` - Auto-generated OpenAPI client (services, models, core)
 - `client/src/pages/` - All page components (login, register, dashboard, events, event-detail, event-new, reserve)
-- `client/src/components/app-sidebar.tsx` - Sidebar navigation component
+- `client/src/components/app-sidebar.tsx` - Sidebar navigation (nav links + dark/light theme toggle in footer)
 - `client/src/lib/auth-context.tsx` - Authentication context provider (uses AuthService API)
+- `client/src/lib/theme-context.tsx` - Theme context provider (dark/light mode, localStorage persistence)
 - `client/src/lib/store.ts` - localStorage data management for local state
 - `shared/schema.ts` - TypeScript interfaces and Zod validation schemas
 - `openapi.json` - OpenAPI spec for the backend API
+
+## UI Layout
+- **Header**: SidebarTrigger (left) + ProfileDropdown (right) with avatar, name, and dropdown menu (Mi perfil, Cerrar sesión)
+- **Sidebar footer**: Dark/light mode toggle switch only (no profile info)
+- **Theme**: Centralized ThemeProvider wraps entire app; dark mode via `class` strategy on `<html>`; persisted in localStorage as `tikko_theme`
 
 ## Running
 - `npm run dev` starts both the Express server and Vite dev server on port 5000

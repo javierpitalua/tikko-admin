@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useAuth } from "@/lib/auth-context";
+import { useTheme } from "@/lib/theme-context";
 import {
   Sidebar,
   SidebarContent,
@@ -11,10 +11,9 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Ticket, LayoutDashboard, Calendar, ShoppingCart, LogOut, ChevronRight } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Ticket, LayoutDashboard, Calendar, ShoppingCart, ChevronRight, Sun, Moon } from "lucide-react";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -24,16 +23,7 @@ const navItems = [
 
 export function AppSidebar() {
   const [location, navigate] = useLocation();
-  const { admin, logout } = useAuth();
-
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
-
-  const initials = admin?.name
-    ? admin.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
-    : "AD";
+  const { isDark, toggleTheme } = useTheme();
 
   return (
     <Sidebar>
@@ -80,17 +70,20 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4">
         <Separator className="mb-4 opacity-50" />
-        <div className="flex items-center gap-3 p-2.5 rounded-xl bg-accent/50">
-          <Avatar className="w-9 h-9 shrink-0">
-            <AvatarFallback className="text-xs bg-gradient-to-br from-primary/20 to-chart-3/15 text-primary font-semibold">{initials}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate leading-tight">{admin?.name || "Admin"}</p>
-            <p className="text-[11px] text-muted-foreground truncate">{admin?.email}</p>
+        <div className="flex items-center justify-between px-2.5 py-2">
+          <div className="flex items-center gap-2">
+            {isDark ? (
+              <Moon className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <Sun className="w-4 h-4 text-muted-foreground" />
+            )}
+            <span className="text-xs text-muted-foreground">{isDark ? "Modo oscuro" : "Modo claro"}</span>
           </div>
-          <Button size="icon" variant="ghost" onClick={handleLogout} className="shrink-0" data-testid="button-logout">
-            <LogOut className="w-4 h-4" />
-          </Button>
+          <Switch
+            checked={isDark}
+            onCheckedChange={toggleTheme}
+            data-testid="switch-theme"
+          />
         </div>
       </SidebarFooter>
     </Sidebar>
